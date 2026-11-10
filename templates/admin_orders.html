@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block title %}Quản Lý Đơn Hàng & In Tem Vận Đơn - Kho Phù Chẩn{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+  <!-- Header & Action Row -->
+  <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+    <div>
+      <h1 class="text-2xl font-black text-gray-900 flex items-center">
+        <i class="fa-solid fa-boxes-packing text-shopee mr-3"></i>
+        Quản Lý Đơn Hàng & In Tem Vận Đơn
+      </h1>
+      <p class="text-xs text-gray-500 mt-1">
+        Trung tâm phân loại SPX Mega SOC Phù Chẩn • Danh sách đơn hàng cần in tem dán và điều phối vào rổ
+      </p>
+    </div>
+
+    <div class="flex items-center space-x-3">
+      <a href="/" class="btn-shopee text-xs font-bold py-2.5 px-4 rounded-lg shadow-sm flex items-center">
+        <i class="fa-solid fa-cart-plus mr-1.5"></i> Tạo Đơn Mới (Shopee)
+      </a>
+      <a href="/station/monitor" class="bg-gray-900 hover:bg-black text-white text-xs font-bold py-2.5 px-4 rounded-lg shadow-sm transition flex items-center">
+        <i class="fa-solid fa-network-wired mr-1.5 text-green-400"></i> Mở SCADA Monitor
+      </a>
+    </div>
+  </div>
+
+  <!-- Filters & Search Bar -->
+  <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+      <!-- Search -->
+      <div class="relative">
+        <input type="text" id="orderSearch" placeholder="Tìm mã SPXVN, tên người nhận, SĐT..."
+               class="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-xs focus:ring-1 focus:ring-shopee focus:border-shopee">
+        <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-gray-400 text-xs"></i>
+      </div>
+
+      <!-- Filter Chute -->
+      <div>
+        <select id="chuteFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs focus:ring-1 focus:ring-shopee focus:border-shopee bg-white">
+          <option value="">Tất cả các tuyến phân phối</option>
+          <option value="1">HN CENTRAL SOC (Hà Nội)</option>
+          <option value="2">BN-BG HUB (Bắc Ninh - Bắc Giang)</option>
+          <option value="3">HP-QN HUB (Duyên Hải - Hải Phòng)</option>
+          <option value="4">TN-PT HUB (Thái Nguyên - Phú Thọ)</option>
+          <option value="5">ND-TH HUB (Nam Định - Thanh Hóa)</option>
+          <option value="0">Sọt Ngoại Lệ (Reject)</option>
+        </select>
+      </div>
+
+      <!-- Filter Status -->
+      <div>
+        <select id="statusFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs focus:ring-1 focus:ring-shopee focus:border-shopee bg-white">
+          <option value="">Tất cả trạng thái</option>
+          <option value="PENDING">Chờ xử lý (Mới tạo)</option>
+          <option value="LABEL_PRINTED">Đã in tem</option>
+          <option value="IN_SORTING">Đang trên băng chuyền</option>
+          <option value="SORTED">Đang vận chuyển đến trạm chuyển phát</option>
+          <option value="REJECTED">Vào sọt lỗi (Reject)</option>
+        </select>
+      </div>
+
+      <!-- Quick Action -->
+      <button onclick="applyFilters()" class="bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold py-2 px-4 rounded-lg transition flex items-center justify-center">
+        <i class="fa-solid fa-filter mr-1.5"></i> Áp Dụng Bộ Lọc
+      </button>
+    </div>
+  </div>
+
+  <!-- Orders Table -->
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200 text-left text-xs">
+        <thead class="bg-gray-50 text-gray-500 font-bold uppercase tracking-wider">
+          <tr>
+            <th class="py-3 px-4">Mã Vận Đơn SPX</th>
+            <th class="py-3 px-4">Người Nhận & Địa Chỉ</th>
+            <th class="py-3 px-4">Tuyến Phân Phối (Hub)</th>
+            <th class="py-3 px-4">Mã Định Tuyến</th>
+            <th class="py-3 px-4">COD / Trọng Lượng</th>
+            <th class="py-3 px-4">Trạng Thái</th>
+            <th class="py-3 px-4 text-center">Thao Tác</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200 bg-white" id="ordersTableBody">
+          {% for order in orders %}
+          <tr class="hover:bg-orange-50/40 transition">
+            <!-- Mã Vận Đơn -->
+            <td class="py-3.5 px-4 font-mono">
+              <span class="font-extrabold text-shopee block">{{ order.tracking_code }}</span>
+              <span class="text-[10px] text-gray-400">Đơn: {{ order.order_code }}</span>
+            </td>
+
+            <!-- Người nhận -->
+            <td class="py-3.5 px-4">
+              <div class="font-bold text-gray-900">{{ order.recipient_name }}</div>
+              <div class="text-[11px] text-gray-500">{{ order.recipient_phone }}</div>
+              <div class="text-[11px] text-gray-600 line-clamp-1" title="{{ order.recipient_address }}, {{ order.recipient_province }}">
+                {{ order.recipient_address }}, {{ order.recipient_province }}
+              </div>
+            </td>
+
+            <!-- Tuyến Phân Phối -->
+            <td class="py-3.5 px-4">
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-blue-100 text-blue-800">
+                <i class="fa-solid fa-warehouse mr-1"></i> {{ order.destination_hub }}
+              </span>
+            </td>
+
+            <!-- Routing Code -->
+            <td class="py-3.5 px-4 font-mono font-bold text-gray-800">
+              {{ order.routing_code }}
+            </td>
+
+            <!-- COD & Khối lượng -->
+            <td class="py-3.5 px-4">
+              <span class="font-bold text-gray-900 block">₫{{ "{:,.0f}".format(order.cod_amount) }}</span>
+              <span class="text-[11px] text-gray-500">{{ order.total_weight_g }}g</span>
+            </td>
+
+            <!-- Trạng thái -->
+            <td class="py-3.5 px-4">
+              {% if order.status == 'SORTED' %}
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700">
+                <i class="fa-solid fa-truck-fast mr-1"></i> Đang đến trạm phát
+              </span>
+              {% elif order.status == 'IN_SORTING' %}
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700 animate-pulse">
+                <i class="fa-solid fa-spinner fa-spin mr-1"></i> Trên băng chuyền
+              </span>
+              {% elif order.status == 'LABEL_PRINTED' %}
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-700">
+                <i class="fa-solid fa-print mr-1"></i> Đã in tem
+              </span>
+              {% elif order.status == 'REJECTED' %}
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-700">
+                <i class="fa-solid fa-circle-xmark mr-1"></i> Sọt Lỗi (Reject)
+              </span>
+              {% else %}
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-yellow-100 text-yellow-800">
+                <i class="fa-solid fa-clock mr-1"></i> Chờ in tem
+              </span>
+              {% endif %}
+            </td>
+
+            <!-- Thao tác -->
+            <td class="py-3.5 px-4 text-center">
+              <a href="/orders/{{ order.id }}/label" target="_blank"
+                 class="inline-flex items-center bg-orange-50 hover:bg-shopee text-shopee hover:text-white border border-shopee font-bold px-3 py-1.5 rounded text-xs transition">
+                <i class="fa-solid fa-print mr-1"></i> In Tem A6
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  function applyFilters() {
+    const q = document.getElementById('orderSearch').value.trim();
+    const chute = document.getElementById('chuteFilter').value;
+    const status = document.getElementById('statusFilter').value;
+
+    let url = '/admin/orders?';
+    if (q) url += `q=${encodeURIComponent(q)}&`;
+    if (chute) url += `chute_id=${chute}&`;
+    if (status) url += `status=${status}&`;
+
+    window.location.href = url;
+  }
+
+  document.getElementById('orderSearch').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+      applyFilters();
+    }
+  });
+</script>
+{% endblock %}

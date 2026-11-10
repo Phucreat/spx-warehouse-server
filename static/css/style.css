@@ -1,0 +1,129 @@
+/* ==========================================================================
+   SPX Mega SOC Sorting System - Custom Styles
+   ========================================================================== */
+
+:root {
+  --shopee-orange: #EE4D2D;
+  --shopee-orange-hover: #d73211;
+  --shopee-bg: #F5F5F5;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background-color: var(--shopee-bg);
+  color: #333333;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #999;
+}
+
+/* Shopee Brand Helpers */
+.bg-shopee {
+  background-color: var(--shopee-orange);
+}
+.text-shopee {
+  color: var(--shopee-orange);
+}
+.border-shopee {
+  border-color: var(--shopee-orange);
+}
+.btn-shopee {
+  background-color: var(--shopee-orange);
+  color: white;
+  transition: all 0.2s ease-in-out;
+}
+.btn-shopee:hover {
+  background-color: var(--shopee-orange-hover);
+  box-shadow: 0 4px 12px rgba(238, 77, 45, 0.3);
+}
+
+/* Pulse animation for active conveyor / chute */
+@keyframes pulse-chute {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+  }
+  50% {
+    transform: scale(1.03);
+    box-shadow: 0 0 0 10px rgba(34, 197, 94, 0);
+  }
+}
+
+.animate-chute-active {
+  animation: pulse-chute 1.2s infinite;
+}
+
+/* ==========================================================================
+   CSS DÀNH RIÊNG CHO IN PHIẾU VẬN ĐƠN SHOPEE XPRESS A6 / A7
+   ========================================================================== */
+.shipping-label-container {
+  width: 100mm;
+  min-height: 150mm;
+  margin: 0 auto;
+  background: #ffffff;
+  border: 2px solid #000000;
+  box-sizing: border-box;
+  font-family: Arial, Helvetica, sans-serif;
+  color: #000000;
+  padding: 2mm;
+  font-size: 11px;
+  line-height: 1.25;
+}
+
+.shipping-label-container * {
+  box-sizing: border-box;
+}
+
+.dashed-border-b {
+  border-bottom: 1px dashed #000;
+}
+.dashed-border-t {
+  border-top: 1px dashed #000;
+}
+.dashed-border-r {
+  border-right: 1px dashed #000;
+}
+.solid-border-b {
+  border-bottom: 1.5px solid #000;
+}
+.solid-border-t {
+  border-top: 1.5px solid #000;
+}
+
+@media print {
+  body {
+    background: #ffffff !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .shipping-label-container {
+    width: 100mm !important;
+    min-height: 150mm !important;
+    max-height: 150mm !important;
+    border: 2px solid #000000 !important;
+    margin: 0 auto !important;
+    page-break-after: always;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  @page {
+    size: 100mm 150mm;
+    margin: 0;
+  }
+}

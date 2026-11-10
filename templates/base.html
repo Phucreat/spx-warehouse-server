@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}SPX Mega SOC Phù Chẩn - Hệ Thống Phân Loại Đơn Hàng{% endblock %}</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            shopee: {
+              DEFAULT: '#EE4D2D',
+              dark: '#d73211',
+              light: '#f05d40',
+              bg: '#f5f5f5'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="/static/css/style.css">
+  {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-[#f5f5f5] text-gray-800 flex flex-col min-h-screen">
+
+  <!-- Top Announcement Bar (Chuẩn Shopee) -->
+  <header class="bg-shopee text-white text-xs py-1.5 px-4 no-print border-b border-orange-600">
+    <div class="max-w-7xl mx-auto flex justify-between items-center">
+      <div class="flex items-center space-x-3">
+        {% if current_user and current_user.role == 'seller' %}
+        <a href="/seller" class="hover:text-orange-200 transition font-bold flex items-center bg-white/20 px-2 py-0.5 rounded">
+          <i class="fa-solid fa-shop mr-1 text-yellow-300"></i> Kênh Người Bán (Đang Quản Trị)
+        </a>
+        {% else %}
+        <a href="/seller/login" class="hover:text-orange-200 transition font-medium flex items-center">
+          <i class="fa-solid fa-shop mr-1"></i> Kênh Người Bán
+        </a>
+        {% endif %}
+        <span class="text-orange-300">|</span>
+        <a href="/spx-hub" class="hover:text-orange-200 transition font-medium flex items-center">
+          <i class="fa-solid fa-truck-fast mr-1"></i> Cổng Vận Hành SPX Express
+        </a>
+        <span class="text-orange-300 hidden md:inline">|</span>
+        <span class="hover:text-orange-200 cursor-pointer hidden md:inline">Tải ứng dụng</span>
+        <span class="text-orange-300 hidden md:inline">|</span>
+        <span class="hover:text-orange-200 flex items-center space-x-1.5 cursor-pointer hidden md:flex">
+          <span>Kết nối</span>
+          <i class="fa-brands fa-facebook"></i>
+          <i class="fa-brands fa-instagram"></i>
+        </span>
+      </div>
+      <div class="flex items-center space-x-3">
+        <a href="/my-orders" class="hover:text-orange-200 transition font-medium flex items-center">
+          <i class="fa-solid fa-clipboard-list mr-1"></i> Đơn Mua Của Tôi
+        </a>
+        <span class="text-orange-300">|</span>
+        
+        {% if current_user %}
+          <!-- User Logged In -->
+          <div class="flex items-center space-x-2">
+            <span class="font-bold flex items-center">
+              {% if current_user.role == 'seller' %}
+              <i class="fa-solid fa-store mr-1 text-yellow-300"></i>
+              <span class="max-w-[150px] truncate">{{ current_user.shop_name or current_user.full_name }}</span>
+              {% else %}
+              <i class="fa-solid fa-circle-user mr-1 text-white"></i>
+              <span>{{ current_user.full_name }}</span>
+              {% endif %}
+            </span>
+            <span class="text-orange-300">|</span>
+            <a href="/logout" class="hover:text-orange-200 font-semibold text-[11px] underline">
+              Đăng Xuất
+            </a>
+          </div>
+        {% else %}
+          <!-- Guest / Not Logged In -->
+          <a href="/register" class="hover:text-orange-200 font-medium">Đăng Ký</a>
+          <span class="text-orange-300">|</span>
+          <a href="/login" class="hover:text-orange-200 font-bold bg-white/20 px-2.5 py-0.5 rounded">
+            Đăng Nhập
+          </a>
+        {% endif %}
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Navigation Bar (Chuẩn Shopee Mall) -->
+  <nav class="bg-white shadow-sm sticky top-0 z-40 no-print border-b border-gray-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-20 items-center gap-4">
+        <!-- Logo Shopee -->
+        <div class="flex items-center space-x-2 flex-shrink-0">
+          <a href="/" class="flex items-center space-x-2">
+            <img src="/static/images/shopee_logo.svg" alt="Shopee Logo" class="h-11 w-auto">
+            <span class="hidden md:inline-block bg-shopee text-white text-[11px] font-black px-2 py-0.5 rounded shadow-sm">Mall</span>
+          </a>
+        </div>
+
+        <!-- Search Bar with Quick Tags -->
+        <div class="flex-grow max-w-2xl hidden sm:block">
+          <div class="flex shadow-sm rounded-lg overflow-hidden border-2 border-shopee">
+            <input type="text" id="navSearchInput" placeholder="Shopee bao ship 0Đ - Đăng ký nhận ngay voucher 100K..." 
+                   autocomplete="off"
+                   onkeydown="if(event.key === 'Enter') { event.preventDefault(); handleNavSearch(); }"
+                   class="w-full px-4 py-2 text-xs focus:outline-none">
+            <button onclick="handleNavSearch()" class="bg-shopee hover:bg-shopee-dark text-white px-6 py-2 text-sm transition flex items-center justify-center">
+              <i class="fa-solid fa-magnifying-glass"></i>
+            </button>
+          </div>
+          <div class="flex space-x-3 text-[11px] text-gray-500 mt-1 pl-1">
+            <span class="hover:text-shopee cursor-pointer" onclick="quickSearch('ESP32')">ESP32 NodeMCU</span>
+            <span class="hover:text-shopee cursor-pointer" onclick="quickSearch('Arduino')">Arduino Uno</span>
+            <span class="hover:text-shopee cursor-pointer" onclick="quickSearch('Servo')">Động Cơ Servo</span>
+            <span class="hover:text-shopee cursor-pointer" onclick="quickSearch('Áo thun')">Áo Thun Nam/Nữ</span>
+            <span class="hover:text-shopee cursor-pointer" onclick="quickSearch('Tai nghe')">Tai Nghe Bluetooth</span>
+          </div>
+        </div>
+
+        <!-- Right Action Items -->
+        <div class="flex items-center space-x-3 flex-shrink-0">
+          <!-- Đơn Mua của tôi -->
+          <a href="/my-orders" class="flex items-center text-xs font-bold text-gray-700 hover:text-shopee px-3 py-2 rounded-lg hover:bg-orange-50 transition">
+            <i class="fa-solid fa-clipboard-list text-base mr-1.5 text-shopee"></i>
+            <span class="hidden lg:inline">Đơn Mua</span>
+          </a>
+
+          <!-- Giỏ Hàng -->
+          <button onclick="openCartModal()" class="relative text-shopee hover:bg-orange-50 p-2.5 rounded-lg transition text-xl flex items-center">
+            <i class="fa-solid fa-cart-shopping"></i>
+            <span id="navCartBadge" class="absolute -top-1 -right-1 bg-yellow-400 text-red-700 font-extrabold text-[11px] w-5 h-5 rounded-full flex items-center justify-center border-2 border-white shadow">
+              0
+            </span>
+          </button>
+
+          <!-- Nút Quét QR Mở Trên Điện Thoại (Dành cho cả lớp trải nghiệm) -->
+          <button onclick="openShareModal()" class="bg-orange-50 border border-shopee text-shopee hover:bg-shopee hover:text-white text-xs font-bold px-3 py-2 rounded-lg shadow-sm transition flex items-center">
+            <i class="fa-solid fa-qrcode mr-1.5 text-sm"></i> <span class="hidden sm:inline">Quét Trên ĐT</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content Area -->
+  <main class="flex-grow">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Authentic Shopee Footer -->
+  <footer class="bg-white text-gray-500 text-xs py-10 mt-16 no-print border-t border-gray-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
+      <div>
+        <h4 class="text-gray-800 font-bold text-xs uppercase mb-3">Chăm Sóc Khách Hàng</h4>
+        <ul class="space-y-2 text-gray-600 text-[11px]">
+          <li><a href="#" class="hover:text-shopee">Trung Tâm Trợ Giúp Shopee</a></li>
+          <li><a href="#" class="hover:text-shopee">Shopee Blog</a></li>
+          <li><a href="#" class="hover:text-shopee">Shopee Mall Chính Hãng</a></li>
+          <li><a href="#" class="hover:text-shopee">Hướng Dẫn Mua Hàng</a></li>
+          <li><a href="#" class="hover:text-shopee">Hướng Dẫn Bán Hàng</a></li>
+          <li><a href="#" class="hover:text-shopee">Thanh Toán & Vận Chuyển</a></li>
+          <li><a href="#" class="hover:text-shopee">Chính Sách Bảo Hành & Hoàn Tiền</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="text-gray-800 font-bold text-xs uppercase mb-3">Về Shopee Việt Nam</h4>
+        <ul class="space-y-2 text-gray-600 text-[11px]">
+          <li><a href="#" class="hover:text-shopee">Giới Thiệu Về Shopee Việt Nam</a></li>
+          <li><a href="#" class="hover:text-shopee">Tuyển Dụng Nhân Tài</a></li>
+          <li><a href="#" class="hover:text-shopee">Điều Khoản Dịch Vụ</a></li>
+          <li><a href="#" class="hover:text-shopee">Chính Sách Bảo Mật</a></li>
+          <li><a href="#" class="hover:text-shopee">Hàng Chính Hãng 100%</a></li>
+          <li><a href="/seller" class="hover:text-shopee font-semibold text-shopee">Kênh Người Bán Shopee</a></li>
+          <li><a href="#" class="hover:text-shopee">Flash Sales Siêu Ưu Đãi</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="text-gray-800 font-bold text-xs uppercase mb-3">Thanh Toán & Vận Chuyển</h4>
+        <div class="flex flex-wrap gap-2 mb-4">
+          <span class="bg-gray-100 border border-gray-200 rounded px-2.5 py-1 text-[11px] font-bold text-gray-700">COD</span>
+          <span class="bg-gray-100 border border-gray-200 rounded px-2.5 py-1 text-[11px] font-bold text-blue-700">Visa</span>
+          <span class="bg-gray-100 border border-gray-200 rounded px-2.5 py-1 text-[11px] font-bold text-red-600">Mastercard</span>
+          <span class="bg-gray-100 border border-gray-200 rounded px-2.5 py-1 text-[11px] font-bold text-orange-600">ShopeePay</span>
+        </div>
+        <h4 class="text-gray-800 font-bold text-xs uppercase mb-2">Đơn Vị Vận Chuyển</h4>
+        <div class="flex items-center space-x-2">
+          <a href="/spx-hub" class="bg-orange-50 border border-orange-200 text-shopee rounded px-2.5 py-1 text-[11px] font-bold flex items-center hover:bg-orange-100 transition">
+            <i class="fa-solid fa-truck-fast mr-1"></i> SPX Express
+          </a>
+          <span class="text-[11px] text-gray-500">Giao hàng tự động 24h</span>
+        </div>
+      </div>
+      <div>
+        <h4 class="text-gray-800 font-bold text-xs uppercase mb-3">Theo Dõi Shopee Trên</h4>
+        <ul class="space-y-2 text-gray-600 text-[11px]">
+          <li><a href="#" class="hover:text-shopee flex items-center"><i class="fa-brands fa-facebook text-blue-600 mr-2 text-sm"></i> Facebook</a></li>
+          <li><a href="#" class="hover:text-shopee flex items-center"><i class="fa-brands fa-instagram text-pink-600 mr-2 text-sm"></i> Instagram</a></li>
+          <li><a href="#" class="hover:text-shopee flex items-center"><i class="fa-brands fa-linkedin text-blue-700 mr-2 text-sm"></i> LinkedIn</a></li>
+        </ul>
+        <h4 class="text-gray-800 font-bold text-xs uppercase mt-4 mb-2">Tải Ứng Dụng Shopee</h4>
+        <div class="flex items-center space-x-2">
+          <div class="w-12 h-12 bg-gray-100 border border-gray-200 rounded p-1 flex items-center justify-center">
+            <i class="fa-solid fa-qrcode text-2xl text-gray-600"></i>
+          </div>
+          <div class="space-y-1 text-[10px] text-gray-500">
+            <div class="bg-gray-100 px-2 py-0.5 rounded font-semibold"><i class="fa-brands fa-apple mr-1"></i> App Store</div>
+            <div class="bg-gray-100 px-2 py-0.5 rounded font-semibold"><i class="fa-brands fa-google-play mr-1"></i> Google Play</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Copyright & Disclaimer -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 border-t border-gray-200 text-center text-gray-400 text-[11px] space-y-1">
+      <p>© 2026 Shopee. Tất cả các quyền được bảo lưu.</p>
+      <p>Quốc gia & Khu vực: Singapore | Indonesia | Thái Lan | Malaysia | Việt Nam | Philippines | Brazil | México</p>
+    </div>
+  </footer>
+
+  <!-- Modal Quét Mã QR Mở Trên Điện Thoại -->
+  <div id="shareModal" class="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center hidden">
+    <div class="bg-white rounded-xl max-w-sm w-full p-6 text-center shadow-2xl relative">
+      <button onclick="closeShareModal()" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-xl">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      <div class="w-12 h-12 bg-orange-100 text-shopee rounded-full flex items-center justify-center mx-auto mb-3 text-2xl">
+        <i class="fa-solid fa-mobile-screen-button"></i>
+      </div>
+      <h3 class="text-lg font-bold text-gray-900 mb-1">Mở Web Trên Điện Thoại</h3>
+      <p class="text-xs text-gray-500 mb-4">Chiếu mã này lên màn hình để cả lớp hoặc thầy cô quét camera vào trải nghiệm đặt hàng!</p>
+      
+      <!-- Container QR Code -->
+      <div id="qrcodeShare" class="flex justify-center p-3 bg-white border border-gray-200 rounded-lg shadow-inner my-2"></div>
+
+      <p id="currentUrlDisplay" class="text-xs text-blue-600 break-all bg-blue-50 p-2 rounded border border-blue-100 font-mono mt-3"></p>
+      <button onclick="copyCurrentUrl()" class="mt-3 w-full bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold py-2 px-4 rounded transition">
+        <i class="fa-solid fa-copy mr-1"></i> Sao chép liên kết
+      </button>
+    </div>
+  </div>
+
+  <!-- QR Code Generator Library -->
+  <script src="/static/js/qrcode.min.js"></script>
+  <script>
+    let qrInstance = null;
+    function openShareModal() {
+      const modal = document.getElementById('shareModal');
+      modal.classList.remove('hidden');
+      const currentUrl = window.location.origin;
+      document.getElementById('currentUrlDisplay').innerText = currentUrl;
+
+      const qrContainer = document.getElementById('qrcodeShare');
+      qrContainer.innerHTML = '';
+      qrInstance = new QRCode(qrContainer, {
+        text: currentUrl,
+        width: 180,
+        height: 180,
+        colorDark: "#EE4D2D",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.M
+      });
+    }
+
+    function closeShareModal() {
+      document.getElementById('shareModal').classList.add('hidden');
+    }
+
+    function copyCurrentUrl() {
+      navigator.clipboard.writeText(window.location.origin);
+      alert('Đã sao chép liên kết vào bộ nhớ tạm: ' + window.location.origin);
+    }
+
+    // Điều hướng và xử lý tìm kiếm trên thanh Header
+    function handleNavSearch() {
+      const input = document.getElementById('navSearchInput');
+      const term = input ? input.value.trim() : '';
+
+      if (window.location.pathname === '/') {
+        if (typeof window.executeSearch === 'function') {
+          window.executeSearch(term);
+        } else {
+          const pageInput = document.getElementById('searchInput');
+          if (pageInput) {
+            pageInput.value = term;
+            pageInput.dispatchEvent(new Event('input', { bubbles: true }));
+          }
+        }
+        const section = document.getElementById('productSection');
+        if (section) {
+          section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        const url = new URL(window.location);
+        if (term) {
+          url.searchParams.set('q', term);
+        } else {
+          url.searchParams.delete('q');
+        }
+        window.history.replaceState({}, '', url);
+      } else {
+        window.location.href = '/?q=' + encodeURIComponent(term) + '#productSection';
+      }
+    }
+
+    // Gợi ý từ khóa tìm kiếm nhanh
+    function quickSearch(term) {
+      const input = document.getElementById('navSearchInput');
+      if (input) {
+        input.value = term;
+      }
+      handleNavSearch();
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const navInput = document.getElementById('navSearchInput');
+      if (navInput && window.location.pathname === '/') {
+        navInput.addEventListener('input', function(e) {
+          const term = e.target.value;
+          if (typeof window.executeSearch === 'function') {
+            window.executeSearch(term);
+          }
+        });
+      }
+    });
+  </script>
+
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>

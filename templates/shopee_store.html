@@ -1,0 +1,568 @@
+{% extends "base.html" %}
+
+{% block title %}Shopee Mall - Ngày Hội Mua Sắm Siêu Ưu Đãi{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+  <!-- Hero Banner & Flash Sale Announcement -->
+  <div class="bg-gradient-to-r from-orange-500 via-red-500 to-orange-600 rounded-2xl shadow-lg p-6 sm:p-10 text-white mb-8 relative overflow-hidden">
+    <div class="relative z-10 max-w-2xl">
+      <div class="inline-flex items-center space-x-2 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-semibold mb-3">
+        <span class="animate-ping w-2 h-2 rounded-full bg-yellow-300 inline-block"></span>
+        <span>SHOPEE MALL SIÊU SALE CHÍNH HÃNG</span>
+      </div>
+      <h1 class="text-2xl sm:text-4xl font-extrabold tracking-tight mb-2">
+        Ngày Hội Mua Sắm Siêu Ưu Đãi Giảm Đến 50%
+      </h1>
+      <p class="text-sm sm:text-base text-orange-100 mb-6 leading-relaxed">
+        Hàng triệu sản phẩm công nghệ, linh kiện & đời sống chính hãng 100%. Miễn phí vận chuyển toàn quốc đơn từ 0Đ, giao hàng siêu tốc 24H cùng SPX Express!
+      </p>
+      <div class="flex flex-wrap gap-3">
+        <a href="#productSection" class="bg-white text-shopee hover:bg-orange-50 font-bold px-5 py-2.5 rounded-lg shadow-md transition text-sm flex items-center">
+          <i class="fa-solid fa-cart-shopping mr-2"></i> Khám Phá Ngay
+        </a>
+        <a href="#productSection" class="bg-black/20 hover:bg-black/40 text-white border border-white/30 font-semibold px-5 py-2.5 rounded-lg transition text-sm flex items-center">
+          <i class="fa-solid fa-ticket mr-2 text-yellow-300"></i> Mã Giảm Giá 50K
+        </a>
+      </div>
+    </div>
+    <!-- Background visual effect -->
+    <div class="absolute -right-10 -bottom-10 opacity-20 text-[200px] pointer-events-none">
+      <i class="fa-solid fa-boxes-stacked"></i>
+    </div>
+  </div>
+
+  <!-- Search & Category Filters -->
+  <div id="productSection" class="bg-white rounded-xl shadow-sm p-4 mb-8 border border-gray-200">
+    <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+      <!-- Search Box -->
+      <div class="relative w-full md:w-96">
+        <input type="text" id="searchInput" placeholder="Tìm kiếm sản phẩm (ESP32, Áo thun, Tai nghe...)" 
+               class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-shopee focus:ring-1 focus:ring-shopee">
+        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-gray-400 text-sm"></i>
+      </div>
+
+      <!-- Category Filter Tabs -->
+      <div class="flex flex-wrap gap-2 w-full md:w-auto">
+        <button onclick="filterCategory(null, this)" data-cat-id="all" class="category-btn active px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-shopee text-white transition">
+          Tất cả sản phẩm ({{ products|length }})
+        </button>
+        {% for cat in categories %}
+        <button onclick="filterCategory({{ cat.id }}, this)" data-cat-id="{{ cat.id }}" class="category-btn px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-gray-100 hover:bg-orange-50 hover:text-shopee text-gray-700 transition">
+          {{ cat.name }}
+        </button>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Search Status Bar -->
+  <div id="searchStatusBar" class="hidden mb-6 p-3.5 bg-orange-50 border border-orange-200 rounded-xl flex items-center justify-between text-xs transition-all shadow-sm">
+    <div class="flex items-center space-x-2">
+      <i class="fa-solid fa-magnifying-glass text-shopee text-sm"></i>
+      <span id="searchStatusText" class="font-semibold text-gray-800"></span>
+    </div>
+    <button onclick="clearSearch()" class="text-shopee hover:text-shopee-dark font-bold hover:underline flex items-center">
+      <i class="fa-solid fa-xmark mr-1"></i> Xóa bộ lọc / Xem tất cả
+    </button>
+  </div>
+
+  <!-- Product Grid -->
+  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4" id="productsGrid">
+    {% for product in products %}
+    <div class="product-card bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden border border-gray-200 flex flex-col justify-between"
+         data-category="{{ product.category_id }}" data-name="{{ product.name | lower }}">
+      <div class="relative overflow-hidden group">
+        <img src="{{ product.image_url }}" alt="{{ product.name }}" 
+             class="w-full h-44 object-cover group-hover:scale-105 transition-transform duration-300"
+             onerror="this.src='https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=500&auto=format&fit=crop&q=60'">
+        <div class="absolute top-2 right-2 bg-yellow-400 text-red-800 text-[10px] font-bold px-1.5 py-0.5 rounded shadow">
+          -{{ ((1 - product.price / (product.original_price or product.price * 1.3)) * 100) | int }}%
+        </div>
+        <div class="absolute bottom-2 left-2 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded-full backdrop-blur-sm">
+          <i class="fa-solid fa-weight-scale mr-1"></i> {{ product.weight_g }}g
+        </div>
+      </div>
+      
+      <div class="p-3 flex-grow flex flex-col justify-between">
+        <div>
+          <h3 class="text-xs font-medium text-gray-800 line-clamp-2 leading-snug mb-1.5 hover:text-shopee cursor-pointer" title="{{ product.name }}">
+            {{ product.name }}
+          </h3>
+          <div class="flex items-baseline space-x-1.5 mb-1">
+            <span class="text-sm font-bold text-shopee">₫{{ "{:,.0f}".format(product.price) }}</span>
+            {% if product.original_price %}
+            <span class="text-[11px] text-gray-400 line-through">₫{{ "{:,.0f}".format(product.original_price) }}</span>
+            {% endif %}
+          </div>
+          <div class="flex items-center text-[11px] text-gray-500 mb-3">
+            <div class="text-yellow-400 mr-1 text-[10px]">
+              <i class="fa-solid fa-star"></i>
+            </div>
+            <span>{{ product.rating }}</span>
+            <span class="mx-1 text-gray-300">•</span>
+            <span>Đã bán {{ product.sold_count }}</span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-1.5 pt-2 border-t border-gray-100">
+          <button onclick="addToCart({{ product.id }}, '{{ product.name }}', {{ product.price }}, '{{ product.image_url }}', {{ product.weight_g }})" 
+                  class="w-full bg-orange-50 hover:bg-orange-100 text-shopee text-xs font-semibold py-1.5 px-2 rounded-lg transition text-center flex items-center justify-center">
+            <i class="fa-solid fa-cart-plus mr-1"></i> Giỏ
+          </button>
+          <button onclick="buyNow({{ product.id }}, '{{ product.name }}', {{ product.price }}, '{{ product.image_url }}', {{ product.weight_g }})" 
+                  class="w-full btn-shopee text-xs font-bold py-1.5 px-2 rounded-lg transition text-center shadow-sm">
+            Mua ngay
+          </button>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+
+    <!-- Empty State when no products match -->
+    <div id="noProductsFound" class="hidden col-span-full py-16 text-center bg-white rounded-2xl border border-dashed border-gray-300 my-4 shadow-sm">
+      <div class="w-16 h-16 bg-orange-50 text-shopee rounded-full flex items-center justify-center mx-auto mb-3 text-2xl">
+        <i class="fa-solid fa-box-open"></i>
+      </div>
+      <h3 class="text-base font-bold text-gray-800 mb-1">Không tìm thấy sản phẩm phù hợp</h3>
+      <p class="text-xs text-gray-500 mb-4">Không có sản phẩm nào khớp với từ khóa <span id="emptyQueryText" class="font-bold text-gray-800"></span>.</p>
+      <button onclick="clearSearch()" class="btn-shopee text-xs font-bold py-2 px-5 rounded-lg shadow-sm">
+        <i class="fa-solid fa-rotate-left mr-1.5"></i> Xem tất cả {{ products|length }} sản phẩm
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<!-- Floating Cart Button -->
+<div class="fixed bottom-6 right-6 z-40 no-print">
+  <button onclick="openCartModal()" class="relative bg-shopee text-white w-14 h-14 rounded-full shadow-2xl flex items-center justify-center text-xl hover:scale-110 transition-transform">
+    <i class="fa-solid fa-bag-shopping"></i>
+    <span id="cartBadge" class="absolute -top-1 -right-1 bg-yellow-400 text-red-700 font-extrabold text-xs w-6 h-6 rounded-full flex items-center justify-center border-2 border-white shadow">
+      0
+    </span>
+  </button>
+</div>
+
+<!-- Modal Giỏ Hàng & Thanh Toán -->
+<div id="cartModal" class="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center hidden p-4">
+  <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl relative max-h-[90vh] flex flex-col">
+    <!-- Header -->
+    <div class="flex justify-between items-center pb-4 border-b border-gray-200">
+      <div class="flex items-center space-x-2">
+        <i class="fa-solid fa-cart-shopping text-shopee text-xl"></i>
+        <h2 class="text-lg font-bold text-gray-900">Giỏ Hàng & Thanh Toán (Shopee Checkout)</h2>
+      </div>
+      <button onclick="closeCartModal()" class="text-gray-400 hover:text-gray-600 text-xl">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <!-- Scrollable content -->
+    <div class="overflow-y-auto flex-grow py-4 space-y-4">
+      <!-- Items list -->
+      <div>
+        <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Sản phẩm đã chọn</h3>
+        <div id="cartItemsList" class="space-y-2">
+          <!-- Render dynamically via JS -->
+        </div>
+      </div>
+
+      <!-- Checkout Information Form -->
+      <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-3">
+        <div class="flex items-center space-x-2 text-shopee font-bold text-sm">
+          <i class="fa-solid fa-location-dot"></i>
+          <span>Địa Chỉ Nhận Hàng (Người Mua)</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Họ và tên người nhận *</label>
+            <input type="text" id="recipientName" placeholder="VD: Nguyễn Văn A" value="{{ current_user.full_name if current_user else 'Nguyễn Văn A' }}"
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs focus:ring-1 focus:ring-shopee focus:border-shopee">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Số điện thoại liên hệ *</label>
+            <input type="text" id="recipientPhone" placeholder="VD: 0987654321" value="{{ current_user.phone if current_user and current_user.phone else '0987654321' }}"
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs focus:ring-1 focus:ring-shopee focus:border-shopee">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Tỉnh / Thành phố (Khu Vực Miền Bắc) *</label>
+            <select id="recipientProvince"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs focus:ring-1 focus:ring-shopee focus:border-shopee bg-white">
+              <option value="Hà Nội" selected>Hà Nội</option>
+              <option value="Bắc Ninh">Bắc Ninh</option>
+              <option value="Bắc Giang">Bắc Giang</option>
+              <option value="Lạng Sơn">Lạng Sơn</option>
+              <option value="Hải Phòng">Hải Phòng</option>
+              <option value="Quảng Ninh">Quảng Ninh</option>
+              <option value="Hải Dương">Hải Dương</option>
+              <option value="Thái Nguyên">Thái Nguyên</option>
+              <option value="Phú Thọ">Phú Thọ</option>
+              <option value="Vĩnh Phúc">Vĩnh Phúc</option>
+              <option value="Lào Cai">Lào Cai</option>
+              <option value="Nam Định">Nam Định</option>
+              <option value="Thái Bình">Thái Bình</option>
+              <option value="Hà Nam">Hà Nam</option>
+              <option value="Ninh Bình">Ninh Bình</option>
+              <option value="Thanh Hóa">Thanh Hóa</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Quận / Huyện *</label>
+            <input type="text" id="recipientDistrict" placeholder="VD: Cầu Giấy, Từ Sơn, Hồng Bàng..." value="Cầu Giấy"
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs focus:ring-1 focus:ring-shopee focus:border-shopee">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">Địa chỉ chi tiết (Số nhà, đường, thôn xóm) *</label>
+          <input type="text" id="recipientAddress" placeholder="VD: Số 144 Đường Xuân Thủy, P. Dịch Vọng Hậu" value="Số 144 Đường Xuân Thủy"
+                 class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs focus:ring-1 focus:ring-shopee focus:border-shopee">
+        </div>
+
+        <!-- Thông tin vận chuyển chuẩn Shopee Xpress -->
+        <div class="p-3 bg-orange-50/70 border border-orange-200 rounded-lg flex items-center justify-between text-xs">
+          <div class="flex items-center space-x-2.5">
+            <i class="fa-solid fa-truck-fast text-shopee text-base"></i>
+            <div>
+              <div class="font-bold text-gray-800">Phương thức vận chuyển: <span class="text-shopee">Shopee Xpress</span></div>
+              <div class="text-[11px] text-gray-500">Giao hàng nhanh 24H • Nhận sau 1-2 ngày</div>
+            </div>
+          </div>
+          <span class="bg-green-600 text-white font-bold px-2 py-0.5 rounded text-[11px]">Miễn Phí 0Đ</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer Summary & Action -->
+    <div class="pt-4 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-3">
+      <div>
+        <div class="text-xs text-gray-500">Tổng thanh toán (COD khi nhận hàng):</div>
+        <div class="text-xl font-extrabold text-shopee" id="cartTotalDisplay">₫0</div>
+        <div class="text-[11px] text-gray-400" id="cartWeightDisplay">Khối lượng đóng gói: 0g</div>
+      </div>
+      <button onclick="submitOrder()" id="btnSubmitOrder" class="w-full sm:w-auto btn-shopee px-6 py-3 rounded-xl font-bold text-sm shadow-md flex items-center justify-center">
+        <i class="fa-solid fa-file-invoice mr-2"></i> Đặt Hàng & Sinh Mã Vận Đơn
+      </button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  let cart = [];
+
+  let currentCategory = null;
+  let currentSearchTerm = '';
+
+  // Áp dụng đồng thời cả Bộ Lọc Danh Mục & Từ Khóa Tìm Kiếm
+  function applyFilters() {
+    const cards = document.querySelectorAll('.product-card');
+    const term = currentSearchTerm.toLowerCase().trim();
+    let visibleCount = 0;
+
+    cards.forEach(card => {
+      const name = card.dataset.name || '';
+      const cat = card.dataset.category;
+
+      const matchCategory = (currentCategory === null) || (cat === String(currentCategory));
+      const matchSearch = !term || name.includes(term);
+
+      if (matchCategory && matchSearch) {
+        card.style.display = 'flex';
+        visibleCount++;
+      } else {
+        card.style.display = 'none';
+      }
+    });
+
+    // Cập nhật thanh trạng thái tìm kiếm
+    const statusBar = document.getElementById('searchStatusBar');
+    const statusText = document.getElementById('searchStatusText');
+    const emptyState = document.getElementById('noProductsFound');
+
+    if (term || currentCategory !== null) {
+      if (statusBar) {
+        statusBar.classList.remove('hidden');
+        let msg = '';
+        if (term && currentCategory !== null) {
+          msg = `Đang tìm: "${term}" trong danh mục đã chọn • Có ${visibleCount} sản phẩm phù hợp`;
+        } else if (term) {
+          msg = `Kết quả tìm kiếm cho: "${term}" • Có ${visibleCount} sản phẩm phù hợp`;
+        } else {
+          msg = `Đang lọc theo danh mục • Có ${visibleCount} sản phẩm`;
+        }
+        if (statusText) statusText.innerText = msg;
+      }
+    } else {
+      if (statusBar) statusBar.classList.add('hidden');
+    }
+
+    if (emptyState) {
+      if (visibleCount === 0) {
+        emptyState.classList.remove('hidden');
+        const emptyQueryText = document.getElementById('emptyQueryText');
+        if (emptyQueryText) emptyQueryText.innerText = term ? `"${term}"` : 'danh mục này';
+      } else {
+        emptyState.classList.add('hidden');
+      }
+    }
+  }
+
+  // Lọc sản phẩm theo danh mục
+  function filterCategory(categoryId, el) {
+    currentCategory = categoryId;
+    const buttons = document.querySelectorAll('.category-btn');
+    buttons.forEach(btn => {
+      btn.classList.remove('bg-shopee', 'text-white');
+      btn.classList.add('bg-gray-100', 'text-gray-700');
+    });
+
+    if (el) {
+      el.classList.remove('bg-gray-100', 'text-gray-700');
+      el.classList.add('bg-shopee', 'text-white');
+    } else {
+      const selector = categoryId === null ? '.category-btn[data-cat-id="all"]' : `.category-btn[data-cat-id="${categoryId}"]`;
+      const targetBtn = document.querySelector(selector);
+      if (targetBtn) {
+        targetBtn.classList.remove('bg-gray-100', 'text-gray-700');
+        targetBtn.classList.add('bg-shopee', 'text-white');
+      }
+    }
+
+    applyFilters();
+  }
+
+  // Hàm thực thi tìm kiếm toàn cục (Được gọi từ Header Nav hoặc Input trang)
+  window.executeSearch = function(term) {
+    currentSearchTerm = term;
+    const pageInput = document.getElementById('searchInput');
+    if (pageInput && pageInput.value !== term) {
+      pageInput.value = term;
+    }
+    const navInput = document.getElementById('navSearchInput');
+    if (navInput && navInput.value !== term) {
+      navInput.value = term;
+    }
+    applyFilters();
+  };
+
+  // Xóa toàn bộ bộ lọc & từ khóa tìm kiếm
+  function clearSearch() {
+    currentSearchTerm = '';
+    currentCategory = null;
+    const pageInput = document.getElementById('searchInput');
+    if (pageInput) pageInput.value = '';
+    const navInput = document.getElementById('navSearchInput');
+    if (navInput) navInput.value = '';
+
+    const buttons = document.querySelectorAll('.category-btn');
+    buttons.forEach((btn) => {
+      if (btn.dataset.catId === 'all') {
+        btn.classList.add('bg-shopee', 'text-white');
+        btn.classList.remove('bg-gray-100', 'text-gray-700');
+      } else {
+        btn.classList.remove('bg-shopee', 'text-white');
+        btn.classList.add('bg-gray-100', 'text-gray-700');
+      }
+    });
+
+    const url = new URL(window.location);
+    url.searchParams.delete('q');
+    url.searchParams.delete('category');
+    window.history.replaceState({}, '', url);
+
+    applyFilters();
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const pageInput = document.getElementById('searchInput');
+    if (pageInput) {
+      pageInput.addEventListener('input', function(e) {
+        window.executeSearch(e.target.value);
+      });
+      pageInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          window.executeSearch(e.target.value);
+        }
+      });
+    }
+
+    // Đọc URL query parameters nếu có (?q=kit hoặc ?category=1)
+    const urlParams = new URLSearchParams(window.location.search);
+    const qParam = urlParams.get('q');
+    const catParam = urlParams.get('category');
+
+    if (catParam) {
+      filterCategory(parseInt(catParam));
+    }
+    if (qParam) {
+      window.executeSearch(qParam);
+      const section = document.getElementById('productSection');
+      if (section && window.location.hash === '#productSection') {
+        setTimeout(() => section.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+      }
+    }
+  });
+
+  // Thêm vào giỏ
+  function addToCart(id, name, price, image, weight) {
+    const existing = cart.find(i => i.id === id);
+    if (existing) {
+      existing.quantity += 1;
+    } else {
+      cart.push({ id, name, price, image, weight, quantity: 1 });
+    }
+    updateCartBadge();
+    showToast(`Đã thêm "${name.substring(0, 20)}..." vào giỏ hàng!`);
+  }
+
+  // Mua ngay (Mở thẳng giỏ hàng và modal thanh toán)
+  function buyNow(id, name, price, image, weight) {
+    addToCart(id, name, price, image, weight);
+    openCartModal();
+  }
+
+  function updateCartBadge() {
+    const count = cart.reduce((sum, i) => sum + i.quantity, 0);
+    document.getElementById('cartBadge').innerText = count;
+  }
+
+  function openCartModal() {
+    if (cart.length === 0) {
+      alert('Giỏ hàng của bạn đang trống! Hãy chọn ít nhất 1 sản phẩm.');
+      return;
+    }
+    renderCartItems();
+    document.getElementById('cartModal').classList.remove('hidden');
+  }
+
+  function closeCartModal() {
+    document.getElementById('cartModal').classList.add('hidden');
+  }
+
+  function renderCartItems() {
+    const list = document.getElementById('cartItemsList');
+    list.innerHTML = '';
+    let total = 0;
+    let totalWeight = 20; // bao bì
+
+    cart.forEach((item, index) => {
+      const subtotal = item.price * item.quantity;
+      total += subtotal;
+      totalWeight += item.weight * item.quantity;
+
+      const row = document.createElement('div');
+      row.className = 'flex items-center justify-between bg-white p-2.5 rounded-lg border border-gray-200';
+      row.innerHTML = `
+        <div class="flex items-center space-x-3">
+          <img src="${item.image}" class="w-12 h-12 object-cover rounded-md border" onerror="this.src='https://via.placeholder.com/50'">
+          <div>
+            <div class="text-xs font-semibold text-gray-800 line-clamp-1">${item.name}</div>
+            <div class="text-xs text-shopee font-bold">₫${item.price.toLocaleString('vi-VN')}</div>
+          </div>
+        </div>
+        <div class="flex items-center space-x-2">
+          <button onclick="changeQty(${index}, -1)" class="w-6 h-6 rounded bg-gray-100 hover:bg-gray-200 text-xs font-bold">-</button>
+          <span class="text-xs font-bold px-1">${item.quantity}</span>
+          <button onclick="changeQty(${index}, 1)" class="w-6 h-6 rounded bg-gray-100 hover:bg-gray-200 text-xs font-bold">+</button>
+          <button onclick="removeItem(${index})" class="text-red-500 hover:text-red-700 text-xs ml-2"><i class="fa-solid fa-trash"></i></button>
+        </div>
+      `;
+      list.appendChild(row);
+    });
+
+    document.getElementById('cartTotalDisplay').innerText = '₫' + total.toLocaleString('vi-VN');
+    document.getElementById('cartWeightDisplay').innerText = `Khối lượng đóng gói: ${totalWeight}g`;
+  }
+
+  function changeQty(index, delta) {
+    cart[index].quantity += delta;
+    if (cart[index].quantity <= 0) {
+      cart.splice(index, 1);
+    }
+    updateCartBadge();
+    if (cart.length === 0) {
+      closeCartModal();
+    } else {
+      renderCartItems();
+    }
+  }
+
+  function removeItem(index) {
+    cart.splice(index, 1);
+    updateCartBadge();
+    if (cart.length === 0) {
+      closeCartModal();
+    } else {
+      renderCartItems();
+    }
+  }
+
+  // Gửi đơn hàng lên Backend
+  async function submitOrder() {
+    const name = document.getElementById('recipientName').value.trim();
+    const phone = document.getElementById('recipientPhone').value.trim();
+    const province = document.getElementById('recipientProvince').value;
+    const district = document.getElementById('recipientDistrict').value.trim();
+    const address = document.getElementById('recipientAddress').value.trim();
+
+    if (!name || !phone || !district || !address) {
+      alert('Vui lòng điền đầy đủ Họ tên, SĐT, Quận/Huyện và Địa chỉ chi tiết!');
+      return;
+    }
+
+    const btn = document.getElementById('btnSubmitOrder');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Đang xử lý...';
+
+    const payload = {
+      recipient_name: name,
+      recipient_phone: phone,
+      recipient_province: province,
+      recipient_district: district,
+      recipient_address: address,
+      items: cart.map(i => ({ product_id: i.id, quantity: i.quantity }))
+    };
+
+    try {
+      const resp = await fetch('/api/v1/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!resp.ok) {
+        throw new Error('Không thể tạo đơn hàng');
+      }
+
+      const newOrder = await resp.json();
+      cart = [];
+      updateCartBadge();
+      window.location.href = `/orders/${newOrder.id}/success`;
+    } catch (err) {
+      alert('Lỗi tạo đơn: ' + err.message);
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-file-invoice mr-2"></i> Đặt Hàng & Sinh Mã Vận Đơn';
+    }
+  }
+
+  function showToast(msg) {
+    const toast = document.createElement('div');
+    toast.className = 'fixed bottom-24 right-6 bg-gray-900 text-white text-xs px-4 py-2.5 rounded-lg shadow-xl z-50 transition-opacity duration-300';
+    toast.innerHTML = `<i class="fa-solid fa-circle-check text-green-400 mr-2"></i>${msg}`;
+    document.body.appendChild(toast);
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      setTimeout(() => toast.remove(), 300);
+    }, 2000);
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block title %}Đơn Mua Của Tôi - Shopee Mall{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-3">
+    <div>
+      <h1 class="text-2xl font-black text-gray-900 flex items-center">
+        <i class="fa-solid fa-receipt text-shopee mr-3"></i> Đơn Mua Của Tôi
+      </h1>
+      <p class="text-xs text-gray-500 mt-0.5">Theo dõi chi tiết bưu kiện và tiến trình phân loại tự động tại Kho SPX Phù Chẩn</p>
+    </div>
+    <a href="/" class="btn-shopee text-xs font-bold py-2 px-4 rounded-lg shadow-sm flex items-center">
+      <i class="fa-solid fa-cart-plus mr-1.5"></i> Mua Thêm Sản Phẩm
+    </a>
+  </div>
+
+  <!-- Status Filter Tabs -->
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 mb-6 overflow-x-auto">
+    <div class="flex border-b border-gray-200 min-w-max text-xs font-semibold">
+      <a href="/my-orders" class="py-3 px-5 border-b-2 {% if not current_status %}border-shopee text-shopee font-bold{% else %}border-transparent text-gray-600 hover:text-shopee{% endif %}">
+        Tất Cả Đơn ({{ orders | length }})
+      </a>
+      <a href="/my-orders?status=PENDING_CONFIRMATION" class="py-3 px-5 border-b-2 {% if current_status == 'PENDING_CONFIRMATION' %}border-shopee text-shopee font-bold{% else %}border-transparent text-gray-600 hover:text-shopee{% endif %}">
+        Chờ Xác Nhận
+      </a>
+      <a href="/my-orders?status=READY_TO_SHIP" class="py-3 px-5 border-b-2 {% if current_status == 'READY_TO_SHIP' %}border-shopee text-shopee font-bold{% else %}border-transparent text-gray-600 hover:text-shopee{% endif %}">
+        Đang Chuẩn Bị Hàng
+      </a>
+      <a href="/my-orders?status=ARRIVED_PHU_CHAN_HUB" class="py-3 px-5 border-b-2 {% if current_status == 'ARRIVED_PHU_CHAN_HUB' %}border-shopee text-shopee font-bold{% else %}border-transparent text-gray-600 hover:text-shopee{% endif %}">
+        Đã Nhập Kho Phù Chẩn
+      </a>
+      <a href="/my-orders?status=SORTED" class="py-3 px-5 border-b-2 {% if current_status == 'SORTED' %}border-shopee text-shopee font-bold{% else %}border-transparent text-gray-600 hover:text-shopee{% endif %}">
+        Đang Đến Trạm Phát
+      </a>
+    </div>
+  </div>
+
+  <!-- Orders List -->
+  <div class="space-y-4">
+    {% if not orders %}
+    <div class="bg-white rounded-2xl p-12 text-center border border-gray-200 shadow-sm">
+      <div class="w-16 h-16 bg-orange-100 text-shopee rounded-full flex items-center justify-center mx-auto mb-3 text-2xl">
+        <i class="fa-solid fa-box-open"></i>
+      </div>
+      <h3 class="text-base font-bold text-gray-800 mb-1">Chưa có đơn hàng nào ở mục này</h3>
+      <p class="text-xs text-gray-500 mb-4">Hãy dạo một vòng Shopee Mall và chọn những món đồ bạn yêu thích nhé!</p>
+      <a href="/" class="btn-shopee text-xs font-bold py-2.5 px-6 rounded-lg inline-flex items-center">
+        <i class="fa-solid fa-cart-shopping mr-2"></i> Khám Phá Sản Phẩm Ngay
+      </a>
+    </div>
+    {% endif %}
+
+    {% for order in orders %}
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition">
+      
+      <!-- Card Header -->
+      <div class="px-5 py-3.5 bg-gray-50 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs">
+        <div class="flex items-center space-x-2">
+          <span class="font-bold text-gray-800"><i class="fa-solid fa-store text-shopee mr-1"></i> {{ order.sender_name }}</span>
+          <span class="text-gray-300">|</span>
+          <span class="font-mono text-gray-500">Mã đơn: {{ order.order_code }}</span>
+        </div>
+
+        <!-- Trạng thái đơn -->
+        <div>
+          {% if order.status == 'SORTED' %}
+          <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800">
+            <i class="fa-solid fa-truck-fast mr-1.5"></i> Đang Vận Chuyển Đến Trạm Phát ({{ order.destination_hub }})
+          </span>
+          {% elif order.status == 'IN_SORTING' %}
+          <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800 animate-pulse">
+            <i class="fa-solid fa-camera mr-1.5"></i> Đang Qua Trạm Camera Phân Loại
+          </span>
+          {% elif order.status == 'ARRIVED_PHU_CHAN_HUB' %}
+          <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800">
+            <i class="fa-solid fa-warehouse mr-1.5"></i> Đã Nhập Kho Phù Chẩn (Bắc Ninh)
+          </span>
+          {% elif order.status == 'READY_TO_SHIP' %}
+          <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-800">
+            <i class="fa-solid fa-box mr-1.5"></i> Người Bán Đang Chuẩn Bị Hàng
+          </span>
+          {% elif order.status == 'REJECTED' %}
+          <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800">
+            <i class="fa-solid fa-triangle-exclamation mr-1.5"></i> Đang Xử Lý Ngoại Lệ
+          </span>
+          {% else %}
+          <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-800">
+            <i class="fa-solid fa-clock mr-1.5"></i> Chờ Người Bán Xác Nhận
+          </span>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Products in order -->
+      <div class="p-5 divide-y divide-gray-100">
+        {% for it in order.items %}
+        <div class="py-2.5 first:pt-0 last:pb-0 flex justify-between items-center text-xs">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 bg-orange-50 rounded-lg flex items-center justify-center text-shopee border border-orange-100 text-base flex-shrink-0">
+              <i class="fa-solid fa-box"></i>
+            </div>
+            <div>
+              <div class="font-bold text-gray-900 line-clamp-1">{{ it.product_name }}</div>
+              <div class="text-[11px] text-gray-500">Số lượng: x{{ it.quantity }} • Khối lượng: {{ it.weight_g }}g</div>
+            </div>
+          </div>
+          <div class="text-right">
+            <span class="font-bold text-gray-900">₫{{ "{:,.0f}".format(it.price * it.quantity) }}</span>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- Card Footer -->
+      <div class="px-5 py-3.5 bg-gray-50/70 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs">
+        <div class="flex items-center space-x-3">
+          <span class="text-gray-500">Mã Vận Đơn: <strong class="text-shopee font-mono">{{ order.tracking_code }}</strong></span>
+          <span class="text-gray-300">|</span>
+          <span class="text-gray-500">Người nhận: <strong>{{ order.recipient_name }}</strong> ({{ order.recipient_province }})</span>
+        </div>
+
+        <div class="flex items-center space-x-4 w-full sm:w-auto justify-between sm:justify-end">
+          <div>
+            <span class="text-gray-500 text-[11px]">Thành tiền (COD):</span>
+            <span class="text-base font-black text-shopee ml-1">₫{{ "{:,.0f}".format(order.total_amount) }}</span>
+          </div>
+          <a href="/orders/{{ order.id }}/tracking" 
+             class="btn-shopee font-bold px-4 py-2 rounded-lg text-xs shadow-sm flex items-center">
+            <i class="fa-solid fa-route mr-1.5"></i> Theo Dõi Vận Chuyển
+          </a>
+        </div>
+      </div>
+
+    </div>
+    {% endfor %}
+  </div>
+
+</div>
+{% endblock %}

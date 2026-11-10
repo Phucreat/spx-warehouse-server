@@ -1,0 +1,46 @@
+services:
+  spx-server:
+    container_name: spx_phu_chan_server
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: spx-phuchan-server:latest
+    ports:
+      - "${SERVER_PORT:-8090}:8090"
+    volumes:
+      # Lưu trữ CSDL bền vững ra ngoài máy chủ (không mất dữ liệu khi tắt container)
+      - ./data:/app/data
+    env_file:
+      - .env
+    environment:
+      - SERVER_HOST=0.0.0.0
+      - SERVER_PORT=8090
+      - DATABASE_URL=${DATABASE_URL:-postgresql://postgres.oodsyjcogjzqutqavrpz:Phudeptrai1%40@aws-0-ap-northeast-1.pooler.supabase.com:5432/postgres}
+      - SECRET_KEY=spx-mega-soc-phu-chan-secret-2026
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8090/"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+# (Tùy chọn) Bật PostgreSQL nội bộ nếu muốn chạy Database riêng bằng lệnh:
+# docker compose --profile with-db up -d
+#
+#  postgres-db:
+#    image: postgres:16-alpine
+#    container_name: spx_postgres_db
+#    profiles: ["with-db"]
+#    environment:
+#      - POSTGRES_DB=spx_warehouse
+#      - POSTGRES_USER=spx_admin
+#      - POSTGRES_PASSWORD=spx_password_2026
+#    volumes:
+#      - pgdata:/var/lib/postgresql/data
+#    ports:
+#      - "5432:5432"
+#    restart: unless-stopped
+#
+#volumes:
+#  pgdata:

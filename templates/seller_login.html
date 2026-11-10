@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}Đăng Nhập Kênh Người Bán - Shopee Seller Centre{% endblock %}
+
+{% block content %}
+<div class="min-h-[75vh] flex items-center justify-center py-10 px-4 bg-gradient-to-br from-gray-100 via-orange-50/40 to-gray-100">
+  <div class="w-full max-w-md">
+    
+    <!-- Seller Login Card -->
+    <div class="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+      
+      <!-- Card Header -->
+      <div class="bg-gray-900 p-6 text-white text-center relative overflow-hidden">
+        <div class="absolute -right-8 -top-8 w-28 h-28 bg-shopee/20 rounded-full blur-xl"></div>
+        <div class="w-14 h-14 bg-shopee text-white rounded-2xl flex items-center justify-center mx-auto mb-2 text-2xl shadow-lg">
+          <i class="fa-solid fa-shop"></i>
+        </div>
+        <h2 class="text-lg font-black tracking-wide">Shopee Seller Centre</h2>
+        <div class="text-xs text-orange-400 font-bold uppercase tracking-wider mt-0.5">Kênh Người Bán Hàng</div>
+        <p class="text-[11px] text-gray-400 mt-1">Dành riêng cho thành viên nhóm điều hành Shop & In tem bưu kiện</p>
+      </div>
+
+      <!-- Quick 1-Click Demo Button -->
+      <div class="p-6 pb-4">
+        
+        {% if msg == 'required' %}
+        <div class="mb-4 p-3 rounded-xl text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200 flex items-center">
+          <i class="fa-solid fa-triangle-exclamation mr-2 text-amber-500 text-base flex-shrink-0"></i>
+          <span>Bạn cần đăng nhập tài khoản <strong>Người Bán</strong> để truy cập Kênh Người Bán!</span>
+        </div>
+        {% endif %}
+
+        <div class="bg-orange-50 border border-orange-200 rounded-xl p-3.5 mb-5">
+          <div class="text-xs font-bold text-gray-800 flex items-center justify-between mb-1.5">
+            <span class="text-shopee"><i class="fa-solid fa-key mr-1.5"></i> Tài khoản nhóm kiểm thử:</span>
+          </div>
+          <button type="button" onclick="quickFillSeller()" 
+                  class="w-full btn-shopee text-white text-xs font-bold py-2.5 px-3 rounded-lg transition shadow flex items-center justify-center">
+            <i class="fa-solid fa-bolt mr-2 text-yellow-300"></i> 1-Click: Đăng Nhập Kênh Người Bán (seller / 123)
+          </button>
+        </div>
+
+        <div id="sellerAlert" class="hidden mb-4 p-3 rounded-lg text-xs font-semibold"></div>
+
+        <!-- Login Form -->
+        <form id="sellerLoginForm" onsubmit="handleSellerLogin(event)" class="space-y-4">
+          <div>
+            <label class="block text-xs font-bold text-gray-700 mb-1">Tài khoản Người Bán (Shop)</label>
+            <div class="relative">
+              <input type="text" id="sellerUsername" required placeholder="Nhập: seller hoặc nhom1"
+                     class="w-full pl-9 pr-3 py-2.5 border border-gray-300 rounded-xl text-xs focus:ring-1 focus:ring-shopee focus:border-shopee">
+              <i class="fa-solid fa-store absolute left-3 top-3 text-gray-400 text-xs"></i>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-gray-700 mb-1">Mật khẩu Shop</label>
+            <div class="relative">
+              <input type="password" id="sellerPassword" required placeholder="Nhập: 123"
+                     class="w-full pl-9 pr-3 py-2.5 border border-gray-300 rounded-xl text-xs focus:ring-1 focus:ring-shopee focus:border-shopee">
+              <i class="fa-solid fa-lock absolute left-3 top-3 text-gray-400 text-xs"></i>
+            </div>
+          </div>
+
+          <button type="submit" id="btnSellerSubmit"
+                  class="w-full bg-gray-900 hover:bg-black text-white py-3 rounded-xl font-bold text-sm shadow-md transition flex items-center justify-center">
+            <i class="fa-solid fa-right-to-bracket mr-2 text-green-400"></i> ĐĂNG NHẬP VÀO KÊNH NGƯỜI BÁN
+          </button>
+        </form>
+
+        <!-- Back to Store -->
+        <div class="mt-6 pt-4 border-t border-gray-200 text-center">
+          <a href="/" class="text-xs text-gray-600 hover:text-shopee inline-flex items-center font-semibold">
+            <i class="fa-solid fa-arrow-left mr-1.5"></i> Quay lại Sàn Mua Sắm Shopee (Người Mua)
+          </a>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  function quickFillSeller() {
+    document.getElementById('sellerUsername').value = 'seller';
+    document.getElementById('sellerPassword').value = '123';
+    document.getElementById('sellerLoginForm').dispatchEvent(new Event('submit'));
+  }
+
+  async function handleSellerLogin(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btnSellerSubmit');
+    const alertBox = document.getElementById('sellerAlert');
+    const u = document.getElementById('sellerUsername').value.trim();
+    const p = document.getElementById('sellerPassword').value;
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Đang xác thực...';
+    alertBox.classList.add('hidden');
+
+    try {
+      const res = await fetch('/api/v1/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: u, password: p, expected_role: 'seller' })
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.detail || 'Sai tài khoản hoặc mật khẩu');
+      }
+
+      alertBox.className = 'mb-4 p-3 rounded-lg text-xs font-semibold bg-green-50 text-green-700 border border-green-200 block';
+      alertBox.innerHTML = '<i class="fa-solid fa-circle-check mr-1.5"></i> Đăng nhập Kênh Người Bán thành công! Đang chuyển hướng...';
+
+      setTimeout(() => {
+        window.location.href = '/seller';
+      }, 500);
+    } catch(err) {
+      alertBox.className = 'mb-4 p-3 rounded-lg text-xs font-semibold bg-red-50 text-red-700 border border-red-200 block';
+      alertBox.innerHTML = `<i class="fa-solid fa-circle-xmark mr-1.5"></i> ${err.message}`;
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-right-to-bracket mr-2 text-green-400"></i> ĐĂNG NHẬP VÀO KÊNH NGƯỜI BÁN';
+    }
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,17 @@
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+.git
+.gitignore
+.dockerignore
+.env.local
+.vscode/
+.idea/
+*.log
+*.db-journal
+*.db-wal
