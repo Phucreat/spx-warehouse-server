@@ -30,7 +30,7 @@
 </head>
 <body class="bg-[#f5f5f5] text-gray-800 flex flex-col min-h-screen">
 
-  <!-- Top Announcement Bar (Chuẩn Shopee) -->
+  <!-- Top Announcement Bar (Shopaa) -->
   <header class="bg-shopee text-white text-xs py-1.5 px-4 no-print border-b border-orange-600">
     <div class="max-w-7xl mx-auto flex justify-between items-center">
       <div class="flex items-center space-x-3">
@@ -45,7 +45,7 @@
         {% endif %}
         <span class="text-orange-300">|</span>
         <a href="/spx-hub" class="hover:text-orange-200 transition font-medium flex items-center">
-          <i class="fa-solid fa-truck-fast mr-1"></i> Cổng Vận Hành SPX Express
+          <i class="fa-solid fa-truck-fast mr-1"></i> Cổng Vận Hành Shopaa Express
         </a>
         <span class="text-orange-300 hidden md:inline">|</span>
         <span class="hover:text-orange-200 cursor-pointer hidden md:inline">Tải ứng dụng</span>
@@ -91,14 +91,14 @@
     </div>
   </header>
 
-  <!-- Main Navigation Bar (Chuẩn Shopee Mall) -->
+  <!-- Main Navigation Bar (Shopaa Mall) -->
   <nav class="bg-white shadow-sm sticky top-0 z-40 no-print border-b border-gray-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between h-20 items-center gap-4">
-        <!-- Logo Shopee -->
+        <!-- Logo Shopaa -->
         <div class="flex items-center space-x-2 flex-shrink-0">
           <a href="/" class="flex items-center space-x-2">
-            <img src="/static/images/shopee_logo.svg" alt="Shopee Logo" class="h-11 w-auto">
+            <img src="/static/images/shopee_logo.svg" alt="Shopaa Logo" class="h-11 w-auto">
             <span class="hidden md:inline-block bg-shopee text-white text-[11px] font-black px-2 py-0.5 rounded shadow-sm">Mall</span>
           </a>
         </div>
@@ -106,7 +106,7 @@
         <!-- Search Bar with Quick Tags -->
         <div class="flex-grow max-w-2xl hidden sm:block">
           <div class="flex shadow-sm rounded-lg overflow-hidden border-2 border-shopee">
-            <input type="text" id="navSearchInput" placeholder="Shopee bao ship 0Đ - Đăng ký nhận ngay voucher 100K..." 
+            <input type="text" id="navSearchInput" placeholder="Shopaa bao ship 0Đ - Đăng ký nhận ngay voucher 100K..." 
                    autocomplete="off"
                    onkeydown="if(event.key === 'Enter') { event.preventDefault(); handleNavSearch(); }"
                    class="w-full px-4 py-2 text-xs focus:outline-none">
@@ -153,15 +153,15 @@
     {% block content %}{% endblock %}
   </main>
 
-  <!-- Authentic Shopee Footer -->
+  <!-- Shopaa Footer -->
   <footer class="bg-white text-gray-500 text-xs py-10 mt-16 no-print border-t border-gray-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
       <div>
         <h4 class="text-gray-800 font-bold text-xs uppercase mb-3">Chăm Sóc Khách Hàng</h4>
         <ul class="space-y-2 text-gray-600 text-[11px]">
-          <li><a href="#" class="hover:text-shopee">Trung Tâm Trợ Giúp Shopee</a></li>
-          <li><a href="#" class="hover:text-shopee">Shopee Blog</a></li>
-          <li><a href="#" class="hover:text-shopee">Shopee Mall Chính Hãng</a></li>
+          <li><a href="#" class="hover:text-shopee">Trung Tâm Trợ Giúp Shopaa</a></li>
+          <li><a href="#" class="hover:text-shopee">Shopaa Blog</a></li>
+          <li><a href="#" class="hover:text-shopee">Shopaa Mall Chính Hãng</a></li>
           <li><a href="#" class="hover:text-shopee">Hướng Dẫn Mua Hàng</a></li>
           <li><a href="#" class="hover:text-shopee">Hướng Dẫn Bán Hàng</a></li>
           <li><a href="#" class="hover:text-shopee">Thanh Toán & Vận Chuyển</a></li>
@@ -169,14 +169,14 @@
         </ul>
       </div>
       <div>
-        <h4 class="text-gray-800 font-bold text-xs uppercase mb-3">Về Shopee Việt Nam</h4>
+        <h4 class="text-gray-800 font-bold text-xs uppercase mb-3">Về Shopaa Việt Nam</h4>
         <ul class="space-y-2 text-gray-600 text-[11px]">
-          <li><a href="#" class="hover:text-shopee">Giới Thiệu Về Shopee Việt Nam</a></li>
+          <li><a href="#" class="hover:text-shopee">Giới Thiệu Về Shopaa Việt Nam</a></li>
           <li><a href="#" class="hover:text-shopee">Tuyển Dụng Nhân Tài</a></li>
           <li><a href="#" class="hover:text-shopee">Điều Khoản Dịch Vụ</a></li>
           <li><a href="#" class="hover:text-shopee">Chính Sách Bảo Mật</a></li>
           <li><a href="#" class="hover:text-shopee">Hàng Chính Hãng 100%</a></li>
-          <li><a href="/seller" class="hover:text-shopee font-semibold text-shopee">Kênh Người Bán Shopee</a></li>
+          <li><a href="/seller" class="hover:text-shopee font-semibold text-shopee">Kênh Người Bán Shopaa</a></li>
           <li><a href="#" class="hover:text-shopee">Flash Sales Siêu Ưu Đãi</a></li>
         </ul>
       </div>
@@ -186,24 +186,24 @@
           <span class="bg-gray-100 border border-gray-200 rounded px-2.5 py-1 text-[11px] font-bold text-gray-700">COD</span>
           <span class="bg-gray-100 border border-gray-200 rounded px-2.5 py-1 text-[11px] font-bold text-blue-700">Visa</span>
           <span class="bg-gray-100 border border-gray-200 rounded px-2.5 py-1 text-[11px] font-bold text-red-600">Mastercard</span>
-          <span class="bg-gray-100 border border-gray-200 rounded px-2.5 py-1 text-[11px] font-bold text-orange-600">ShopeePay</span>
+          <span class="bg-gray-100 border border-gray-200 rounded px-2.5 py-1 text-[11px] font-bold text-orange-600">ShopaaPay</span>
         </div>
         <h4 class="text-gray-800 font-bold text-xs uppercase mb-2">Đơn Vị Vận Chuyển</h4>
         <div class="flex items-center space-x-2">
           <a href="/spx-hub" class="bg-orange-50 border border-orange-200 text-shopee rounded px-2.5 py-1 text-[11px] font-bold flex items-center hover:bg-orange-100 transition">
-            <i class="fa-solid fa-truck-fast mr-1"></i> SPX Express
+            <i class="fa-solid fa-truck-fast mr-1"></i> Shopaa Express
           </a>
           <span class="text-[11px] text-gray-500">Giao hàng tự động 24h</span>
         </div>
       </div>
       <div>
-        <h4 class="text-gray-800 font-bold text-xs uppercase mb-3">Theo Dõi Shopee Trên</h4>
+        <h4 class="text-gray-800 font-bold text-xs uppercase mb-3">Theo Dõi Shopaa Trên</h4>
         <ul class="space-y-2 text-gray-600 text-[11px]">
           <li><a href="#" class="hover:text-shopee flex items-center"><i class="fa-brands fa-facebook text-blue-600 mr-2 text-sm"></i> Facebook</a></li>
           <li><a href="#" class="hover:text-shopee flex items-center"><i class="fa-brands fa-instagram text-pink-600 mr-2 text-sm"></i> Instagram</a></li>
           <li><a href="#" class="hover:text-shopee flex items-center"><i class="fa-brands fa-linkedin text-blue-700 mr-2 text-sm"></i> LinkedIn</a></li>
         </ul>
-        <h4 class="text-gray-800 font-bold text-xs uppercase mt-4 mb-2">Tải Ứng Dụng Shopee</h4>
+        <h4 class="text-gray-800 font-bold text-xs uppercase mt-4 mb-2">Tải Ứng Dụng Shopaa</h4>
         <div class="flex items-center space-x-2">
           <div class="w-12 h-12 bg-gray-100 border border-gray-200 rounded p-1 flex items-center justify-center">
             <i class="fa-solid fa-qrcode text-2xl text-gray-600"></i>
@@ -218,7 +218,7 @@
 
     <!-- Copyright & Disclaimer -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 border-t border-gray-200 text-center text-gray-400 text-[11px] space-y-1">
-      <p>© 2026 Shopee. Tất cả các quyền được bảo lưu.</p>
+      <p>© 2026 Shopaa. Tất cả các quyền được bảo lưu.</p>
       <p>Quốc gia & Khu vực: Singapore | Indonesia | Thái Lan | Malaysia | Việt Nam | Philippines | Brazil | México</p>
     </div>
   </footer>

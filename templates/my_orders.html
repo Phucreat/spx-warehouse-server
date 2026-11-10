@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Đơn Mua Của Tôi - Shopee Mall{% endblock %}
+{% block title %}Đơn Mua Của Tôi - Shopaa Mall{% endblock %}
 
 {% block content %}
 <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -36,6 +36,9 @@
       <a href="/my-orders?status=SORTED" class="py-3 px-5 border-b-2 {% if current_status == 'SORTED' %}border-shopee text-shopee font-bold{% else %}border-transparent text-gray-600 hover:text-shopee{% endif %}">
         Đang Đến Trạm Phát
       </a>
+      <a href="/my-orders?status=REJECTED" class="py-3 px-5 border-b-2 {% if current_status == 'REJECTED' %}border-red-600 text-red-600 font-bold{% else %}border-transparent text-gray-600 hover:text-red-600{% endif %}">
+        Xử Lý Ngoại Lệ
+      </a>
     </div>
   </div>
 
@@ -47,7 +50,7 @@
         <i class="fa-solid fa-box-open"></i>
       </div>
       <h3 class="text-base font-bold text-gray-800 mb-1">Chưa có đơn hàng nào ở mục này</h3>
-      <p class="text-xs text-gray-500 mb-4">Hãy dạo một vòng Shopee Mall và chọn những món đồ bạn yêu thích nhé!</p>
+      <p class="text-xs text-gray-500 mb-4">Hãy dạo một vòng Shopaa Mall và chọn những món đồ bạn yêu thích nhé!</p>
       <a href="/" class="btn-shopee text-xs font-bold py-2.5 px-6 rounded-lg inline-flex items-center">
         <i class="fa-solid fa-cart-shopping mr-2"></i> Khám Phá Sản Phẩm Ngay
       </a>

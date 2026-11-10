@@ -9,7 +9,7 @@ from config import ORIGIN_HUB
 from auth import get_current_user
 import datetime
 
-router = APIRouter(prefix="/api/v1", tags=["Shopee Storefront"])
+router = APIRouter(prefix="/api/v1", tags=["Shopaa Storefront"])
 
 @router.get("/categories", response_model=List[CategoryResponse])
 def get_categories(db: Session = Depends(get_db)):
@@ -101,6 +101,7 @@ def create_order(
         status="PENDING_CONFIRMATION",
         qr_payload=tracking_code,
         note=payload.note,
+        label_size="A7",
         user_id=current_user.id if current_user else None,
         created_at=datetime.datetime.now(datetime.timezone.utc)
     )

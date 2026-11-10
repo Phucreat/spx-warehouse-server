@@ -7,7 +7,7 @@ from schemas import OrderResponse
 from api.api_station import ws_manager
 import datetime
 
-router = APIRouter(prefix="/api/v1/seller", tags=["Shopee Seller Centre"])
+router = APIRouter(prefix="/api/v1/seller", tags=["Shopaa Seller Centre"])
 
 @router.get("/orders", response_model=List[OrderResponse])
 def get_seller_orders(
@@ -38,8 +38,11 @@ async def prepare_order_and_print(order_id: int, db: Session = Depends(get_db)):
     if not order:
         raise HTTPException(status_code=404, detail="Không tìm thấy đơn hàng")
     
+    now_utc = datetime.datetime.now(datetime.timezone.utc)
     order.status = "READY_TO_SHIP"
-    order.confirmed_at = datetime.datetime.now(datetime.timezone.utc)
+    order.confirmed_at = now_utc
+    order.label_size = "A7"
+    order.label_printed_at = now_utc
     db.commit()
 
     # Báo qua WebSocket

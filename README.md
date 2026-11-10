@@ -30,10 +30,10 @@ Tại Kho Mega SOC Phù Chẩn, hàng hóa toàn quốc tập kết về và đ�
   ┌─────────────────────────────────────────────────────────┐
   │ FASTAPI SERVER + DATABASE CHUẨN QUAN HỆ                │
   │ • Quản lý sản phẩm, đơn hàng, bảng bưu kiện             │
-  │ • Sinh tem vận đơn Shopee Xpress chuẩn A6               │
+  │ • Sinh tem vận đơn Shopee Xpress chuẩn A7               │
   │ • RESTful API & WebSocket Real-time                     │
   └──────────┬──────────────────────────────────┬───────────┘
-             │ In Tem A6                        │ Tra cứu API
+             │ In Tem A7                        │ Tra cứu API
              ▼                                  ▼
     [ Hộp Hàng Trên Băng Tải ]        [ Trạm Computer Vision ]
              │                       (Webcam 2K + OpenCV QR/Barcode)
@@ -89,7 +89,7 @@ python -m uvicorn main:app --host 0.0.0.0 --port 8090 --reload
 2. **PHÂN HỆ 2: KÊNH NGƯỜI BÁN SHOPEE (SHOPEE SELLER CENTRE - CHO THÀNH VIÊN NHÓM):**
    - **Cổng Người Bán:** `http://localhost:8090/seller`
      * Thành viên nhóm đăng nhập vào xem các đơn hàng khách vừa đặt.
-     * Bấm **"Chuẩn Bị & In Tem A6"**: Mở phiếu in mã vận đơn Shopee Xpress chuẩn 100% mẫu thực tế (có Barcode 1D Code128, mã QR 2D, mã định tuyến to đậm). Nhóm in ra và dán trực tiếp lên hộp hàng thật ngoài đời.
+     * Bấm **"Chuẩn Bị & In Tem A7"**: Mở phiếu in mã vận đơn Shopee Xpress chuẩn khổ A7 (74x105 mm, có Barcode 1D Code128, mã QR 2D, mã định tuyến to đậm). Nhóm in ra và dán trực tiếp lên hộp hàng thật ngoài đời.
      * Bấm **"Bàn Giao SPX"**: Kiện hàng sẵn sàng được đưa lên băng chuyền tại mô hình phân loại.
 
 3. **PHÂN HỆ 3: KHO TỔNG SPX MEGA SOC PHÙ CHẨN & TRẠM PC CONTROL SCADA:**

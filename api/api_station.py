@@ -74,7 +74,7 @@ async def lookup_package_for_sorting(
         )
 
     # Đơn hàng hợp lệ
-    items_str = ", ".join([f"{it.product_name} (x{it.quantity})" for it in order.items]) if order.items else "Hàng hóa Shopee"
+    items_str = ", ".join([f"{it.product_name} (x{it.quantity})" for it in order.items]) if order.items else "Hàng hóa Shopaa"
     action = f"SORT_CHUTE_{order.destination_chute_id}" if order.destination_chute_id > 0 else "REJECT"
 
     # Cập nhật trạng thái bưu kiện đang trên băng chuyền
@@ -138,14 +138,15 @@ async def confirm_sorting_result(
         raise HTTPException(409, "Đơn đã có kết quả phân loại; cần xử lý lại thủ công")
     
     order_id = order.id if order else None
-    new_status = "SORTED" if payload.status == "SUCCESS" else "REJECTED"
+    log_status = "SORTED" if payload.status == "SUCCESS" else "REJECTED"
+    log_decision = "PASS" if payload.status == "SUCCESS" else "REJECT"
 
     response = SortConfirmResponse(
         success=True,
         message="Mô phỏng, không đổi trạng thái đơn" if payload.simulated else "Đã lưu kết quả phân loại",
         tracking_code=payload.tracking_code,
         chute_id=payload.chute_id,
-        order_status="SIMULATED" if payload.simulated else new_status,
+        order_status="SIMULATED" if payload.simulated else log_status,
     )
     if payload.job_id:
         db.add(SortReceipt(job_id=payload.job_id, payload=fingerprint,
@@ -162,21 +163,13 @@ async def confirm_sorting_result(
         db.commit()
         return response
 
-    if order:
-        changed = db.query(Order).filter(
-            Order.id == order.id, ~Order.status.in_(["SORTED", "REJECTED"])
-        ).update({"status": new_status, "sorted_at": datetime.datetime.now(datetime.timezone.utc)},
-                 synchronize_session=False)
-        if changed != 1:
-            db.rollback()
-            raise HTTPException(409, "Đơn vừa được xác nhận bởi giao dịch khác")
-
-    # Ghi log lịch sử phân loại
+    # Chỉ INSERT vào sorting_logs; việc cập nhật orders do trigger trg_sorting_logs_apply đảm nhiệm.
     log_entry = SortingLog(
         order_id=order_id,
         tracking_code=payload.tracking_code,
         chute_id=payload.chute_id,
-        status=payload.status,
+        status=log_status,
+        decision=log_decision,
         scan_attempts=payload.scan_attempts,
         scanned_from=payload.scanned_from,
         notes=payload.notes or ("Đã phân loại vào rổ thành công - Đang vận chuyển đến trạm chuyển phát" if payload.status == "SUCCESS" else "Phân loại vào sọt lỗi")
@@ -207,31 +200,40 @@ def get_sorting_statistics(db: Session = Depends(get_db)):
     """Thống kê sản lượng phân loại thời gian thực"""
     total_orders = db.query(Order).count()
     sorted_count = db.query(Order).filter(Order.status == "SORTED").count()
-    pending_count = db.query(Order).filter(Order.status.in_(["PENDING", "LABEL_PRINTED", "PENDING_CONFIRMATION", "READY_TO_SHIP", "ARRIVED_PHU_CHAN_HUB", "IN_SORTING"])).count()
+    in_sorting_count = db.query(Order).filter(Order.status == "IN_SORTING").count()
+    pending_count = db.query(Order).filter(
+        Order.status.in_(["PENDING", "LABEL_PRINTED", "PENDING_CONFIRMATION", "READY_TO_SHIP", "ARRIVED_PHU_CHAN_HUB", "IN_SORTING"])
+    ).count()
     rejected_count = db.query(Order).filter(Order.status == "REJECTED").count()
+    manual_review_count = db.query(SortingLog).filter(SortingLog.status == "MANUAL_REVIEW").count()
 
-    # Thống kê số lượng theo từng rổ từ bảng sorting_logs
+    # Thống kê số lượng theo từng rổ từ bảng sorting_logs (khớp giá trị PC-Control: SORTED / REJECTED / MANUAL_REVIEW)
     chute_counts = {c["chute_id"]: 0 for c in CHUTE_DEFINITIONS}
     chute_data = db.query(
         SortingLog.chute_id,
         func.count(SortingLog.id)
-    ).filter(SortingLog.status == "SUCCESS").group_by(SortingLog.chute_id).all()
+    ).filter(
+        SortingLog.chute_id > 0,
+        SortingLog.status.in_(["SORTED", "SUCCESS"]),
+    ).group_by(SortingLog.chute_id).all()
 
     for cid, count in chute_data:
         if cid in chute_counts:
             chute_counts[cid] = count
 
-    # Số lượng bưu kiện trong sọt lỗi (Reject)
+    # Số lượng bưu kiện trong sọt lỗi (Reject) - không gộp MANUAL_REVIEW
     reject_logs_count = db.query(SortingLog).filter(
-        (SortingLog.chute_id == 0) | (SortingLog.status == "REJECTED")
+        SortingLog.status == "REJECTED"
     ).count()
     chute_counts[0] = max(chute_counts.get(0, 0), reject_logs_count, rejected_count)
 
     return {
         "total_orders": total_orders,
         "sorted_count": sorted_count,
+        "in_sorting_count": in_sorting_count,
         "pending_count": pending_count,
         "rejected_count": rejected_count,
+        "manual_review_count": manual_review_count,
         "success_rate": round((sorted_count / total_orders * 100) if total_orders > 0 else 100.0, 1),
         "chute_counts": chute_counts
     }

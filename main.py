@@ -28,7 +28,7 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="SPX Mega SOC Phù Chẩn - Hệ Thống Vận Hành TMĐT & Phân Loại Bưu Kiện",
-    description="Hệ thống 3 phân hệ độc lập: 1) Sàn Shopee Mall (Khách hàng), 2) Kênh Người Bán (Seller Centre), 3) Trung tâm Kho SPX Phù Chẩn & Trạm PC Control Hiện Trường.",
+    description="Hệ thống 3 phân hệ độc lập: 1) Sàn Shopaa Mall (Khách hàng), 2) Kênh Người Bán (Seller Centre), 3) Trung tâm Kho SPX Phù Chẩn & Trạm PC Control Hiện Trường.",
     version="3.0.0"
 )
 
@@ -74,7 +74,7 @@ async def websocket_sorting_endpoint(websocket: WebSocket):
 
 @app.get("/login")
 def view_login(request: Request, current_user: Optional[User] = Depends(get_current_user)):
-    """Trang đăng nhập Shopee cho Người Mua"""
+    """Trang đăng nhập Shopaa cho Người Mua"""
     if current_user:
         return RedirectResponse(url="/seller" if current_user.role == "seller" else "/")
     return templates.TemplateResponse("login.html", {
@@ -84,7 +84,7 @@ def view_login(request: Request, current_user: Optional[User] = Depends(get_curr
 
 @app.get("/seller/login")
 def view_seller_login(request: Request, msg: str = "", current_user: Optional[User] = Depends(get_current_user)):
-    """Trang đăng nhập Kênh Người Bán Shopee (Seller Centre)"""
+    """Trang đăng nhập Kênh Người Bán Shopaa (Seller Centre)"""
     if current_user and current_user.role == "seller":
         return RedirectResponse(url="/seller")
     return templates.TemplateResponse("seller_login.html", {
@@ -122,7 +122,7 @@ def view_shopee_store(
     db: Session = Depends(get_db),
     current_user: Optional[User] = Depends(get_current_user)
 ):
-    """Trang chủ mua sắm Shopee Mall thuần túy cho khách hàng"""
+    """Trang chủ mua sắm Shopaa Mall thuần túy cho khách hàng"""
     categories = db.query(Category).order_by(Category.id.asc()).all()
     products = db.query(Product).order_by(Product.id.asc()).all()
     return templates.TemplateResponse("shopee_store.html", {
@@ -207,7 +207,7 @@ def view_seller_centre(
     db: Session = Depends(get_db),
     current_user: Optional[User] = Depends(get_current_user)
 ):
-    """Cổng Kênh Người Bán Shopee (Shopee Seller Centre) - Bắt buộc tài khoản Người Bán"""
+    """Cổng Kênh Người Bán Shopaa (Shopaa Seller Centre) - Bắt buộc tài khoản Người Bán"""
     if not current_user or current_user.role != "seller":
         return RedirectResponse(url="/seller/login?msg=required", status_code=303)
 
@@ -241,7 +241,7 @@ def view_shipping_label(
     db: Session = Depends(get_db),
     current_user: Optional[User] = Depends(get_current_user)
 ):
-    """Phiếu mã vận đơn chuẩn Shopee Xpress A6 (In tem bưu kiện từ Kênh Người Bán)"""
+    """Phiếu mã vận đơn chuẩn Shopaa Express A7 (In tem bưu kiện từ Kênh Người Bán)"""
     order = db.query(Order).filter(Order.id == order_id).first()
     if not order:
         raise HTTPException(status_code=404, detail="Không tìm thấy đơn hàng")
@@ -283,5 +283,5 @@ def redirect_old_admin():
 
 if __name__ == "__main__":
     import uvicorn
-    print(f"Khởi động Server Hệ Thống Shopee & SPX Phù Chẩn tại http://{SERVER_HOST}:{SERVER_PORT}")
+    print(f"Khởi động Server Hệ Thống Shopaa & SPX Phù Chẩn tại http://{SERVER_HOST}:{SERVER_PORT}")
     uvicorn.run("main:app", host=SERVER_HOST, port=SERVER_PORT, reload=DEBUG)

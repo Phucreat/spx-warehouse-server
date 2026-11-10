@@ -74,6 +74,8 @@ class OrderResponse(BaseModel):
     cod_amount: float
     total_weight_g: int
     status: str
+    label_size: str = "A7"
+    label_printed_at: Optional[datetime.datetime] = None
     created_at: datetime.datetime
     sorted_at: Optional[datetime.datetime]
     items: List[OrderItemResponse] = []

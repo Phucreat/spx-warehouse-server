@@ -83,7 +83,7 @@
           </div>
           <div>
             <div class="text-sm font-bold text-red-600">Bưu Kiện Đang Được Kiểm Tra Thủ Công (Xử Lý Ngoại Lệ)</div>
-            <p class="text-xs text-gray-600 mt-0.5">Camera quét quá 3 lần không đọc được mã hoặc thông tin không khớp CSDL. Chuyển nhân viên kiểm tra thủ công.</p>
+            <p class="text-xs text-gray-600 mt-0.5">Bưu kiện không đạt kiểm tra tại trạm phân loại (lỗi đọc mã, logo hoặc bao bì). Chuyển nhân viên kiểm tra thủ công.</p>
           </div>
           {% elif order.status == 'IN_SORTING' %}
           <div class="absolute -left-6 sm:-left-8 w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs shadow animate-ping">
@@ -133,7 +133,7 @@
             <i class="fa-solid fa-check"></i>
           </div>
           <div>
-            <div class="text-sm font-bold text-gray-900">Người Bán Đã Đóng Gói & In Phiếu Gửi Hàng SPX (A6)</div>
+            <div class="text-sm font-bold text-gray-900">Người Bán Đã Đóng Gói & In Phiếu Gửi Hàng SPX (A7)</div>
             <p class="text-xs text-gray-600 mt-0.5">Shop đã in mã vận đơn <code class="font-mono bg-gray-100 px-1 rounded">{{ order.tracking_code }}</code> dán lên kiện hàng.</p>
             <span class="text-[11px] text-gray-400 font-mono">{{ order.confirmed_at.strftime('%d/%m/%Y %H:%M') if order.confirmed_at else '' }}</span>
           </div>

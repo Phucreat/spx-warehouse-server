@@ -1,5 +1,6 @@
 import datetime
-from sqlalchemy import Column, Integer, String, Float, Text, ForeignKey, DateTime
+from sqlalchemy import Boolean, Column, Integer, String, Float, Text, ForeignKey, DateTime, JSON
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID, ARRAY as PG_ARRAY
 from sqlalchemy.orm import relationship
 from database import Base
 
@@ -92,6 +93,8 @@ class Order(Base):
     confirmed_at = Column(DateTime, nullable=True)            # Thời điểm shop bấm xác nhận & in tem
     hub_received_at = Column(DateTime, nullable=True)         # Thời điểm SPX Phù Chẩn tiếp nhận
     sorted_at = Column(DateTime, nullable=True)               # Thời điểm robot/cơ cấu gạt vào rổ
+    label_size = Column(String, nullable=False, default="A7")
+    label_printed_at = Column(DateTime(timezone=True), nullable=True)
 
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
 
@@ -129,10 +132,19 @@ class SortingLog(Base):
     order_id = Column(Integer, ForeignKey("orders.id"), nullable=True)
     tracking_code = Column(String(50), index=True, nullable=False)
     chute_id = Column(Integer, nullable=False)               # Rổ được gạt vào (1..5 hoặc 0)
-    status = Column(String(50), nullable=False)              # SUCCESS hoặc REJECTED
+    status = Column(String(50), nullable=False)              # SORTED, REJECTED hoặc MANUAL_REVIEW
     scan_attempts = Column(Integer, default=1)               # Số lần quét thử của camera
     scanned_from = Column(String(100), default="Webcam_2K_Station")
     notes = Column(String(255), nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    inspection_uuid = Column(String(36).with_variant(PG_UUID(as_uuid=True), "postgresql"), unique=True, nullable=True)
+    decision = Column(String, nullable=True)                 # PASS, REJECT, MANUAL_REVIEW
+    reason = Column(Text, nullable=True)
+    qr_ok = Column(Boolean, nullable=True)
+    logo_ok = Column(Boolean, nullable=True)
+    damage_detected = Column(Boolean, nullable=True)
+    damage_types = Column(JSON().with_variant(PG_ARRAY(Text), "postgresql"), nullable=True)
+    station_id = Column(String, nullable=True)
+    evidence_path = Column(Text, nullable=True)
 
     order = relationship("Order", back_populates="logs")
