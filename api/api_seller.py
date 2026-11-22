@@ -43,6 +43,8 @@ async def prepare_order_and_print(order_id: int, db: Session = Depends(get_db)):
     order.confirmed_at = now_utc
     order.label_size = "A7"
     order.label_printed_at = now_utc
+    if not order.qr_payload:
+        order.qr_payload = order.tracking_code
     db.commit()
 
     # Báo qua WebSocket

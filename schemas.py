@@ -74,6 +74,7 @@ class OrderResponse(BaseModel):
     cod_amount: float
     total_weight_g: int
     status: str
+    qr_payload: Optional[str] = None
     label_size: str = "A7"
     label_printed_at: Optional[datetime.datetime] = None
     created_at: datetime.datetime
