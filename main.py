@@ -4,6 +4,8 @@ if sys.platform == "win32":
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 
+import asyncio
+from contextlib import asynccontextmanager
 from typing import Optional, List
 from pathlib import Path
 from fastapi import FastAPI, Depends, Request, WebSocket, WebSocketDisconnect, HTTPException
@@ -11,25 +13,55 @@ from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from database import engine, Base, get_db
 from models import Product, Category, Order, SortingLog, User
-from config import SERVER_HOST, SERVER_PORT, DEBUG, ORIGIN_HUB
+from config import SERVER_HOST, SERVER_PORT, DEBUG, ORIGIN_HUB, format_vn_time, resolve_robot_bin
 from auth import get_current_user, logout_user
 from api.api_store import router as store_router
 from api.api_orders import router as orders_router
-from api.api_station import router as station_router, ws_manager
-from api.api_seller import router as seller_router
+from api.api_station import (
+    router as station_router,
+    ws_manager,
+    watch_sorting_logs_loop,
+    _fetch_max_sorting_log_id,
+)
+from api.api_seller import router as seller_router, filter_orders_by_tab
 from api.api_auth import router as auth_router
 
 # Khởi tạo CSDL
 Base.metadata.create_all(bind=engine)
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Khởi chạy luồng nền theo dõi Supabase sorting_logs từ Software-PC Control."""
+    stop_event = asyncio.Event()
+    try:
+        initial_id = await asyncio.wait_for(
+            asyncio.to_thread(_fetch_max_sorting_log_id), timeout=4.0
+        )
+    except Exception:
+        initial_id = 0
+    watcher_task = asyncio.create_task(
+        watch_sorting_logs_loop(stop_event, initial_id=initial_id)
+    )
+    try:
+        yield
+    finally:
+        stop_event.set()
+        try:
+            await asyncio.wait_for(watcher_task, timeout=3.0)
+        except Exception:
+            watcher_task.cancel()
+
+
 app = FastAPI(
     title="SPX Mega SOC Phù Chẩn - Hệ Thống Vận Hành TMĐT & Phân Loại Bưu Kiện",
     description="Hệ thống 3 phân hệ độc lập: 1) Sàn Shopaa Mall (Khách hàng), 2) Kênh Người Bán (Seller Centre), 3) Trung tâm Kho SPX Phù Chẩn & Trạm PC Control Hiện Trường.",
-    version="3.0.0"
+    version="3.1.0",
+    lifespan=lifespan,
 )
 
 # Cấu hình CORS mở rộng cho phép máy trạm hiện trường & điện thoại truy cập
@@ -46,6 +78,8 @@ BASE_DIR = Path(__file__).resolve().parent
 # Mount Static Files & Templates
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
+templates.env.filters["vn_time"] = format_vn_time
+templates.env.globals["resolve_robot_bin"] = resolve_robot_bin
 
 # Đăng ký API Routers
 app.include_router(store_router)
@@ -77,7 +111,7 @@ def view_login(request: Request, current_user: Optional[User] = Depends(get_curr
     """Trang đăng nhập Shopaa cho Người Mua"""
     if current_user:
         return RedirectResponse(url="/seller" if current_user.role == "seller" else "/")
-    return templates.TemplateResponse("login.html", {
+    return templates.TemplateResponse(request=request, name="login.html", context={
         "request": request,
         "current_user": None
     })
@@ -87,7 +121,7 @@ def view_seller_login(request: Request, msg: str = "", current_user: Optional[Us
     """Trang đăng nhập Kênh Người Bán Shopaa (Seller Centre)"""
     if current_user and current_user.role == "seller":
         return RedirectResponse(url="/seller")
-    return templates.TemplateResponse("seller_login.html", {
+    return templates.TemplateResponse(request=request, name="seller_login.html", context={
         "request": request,
         "msg": msg,
         "current_user": current_user
@@ -98,7 +132,7 @@ def view_register(request: Request, current_user: Optional[User] = Depends(get_c
     """Trang đăng ký tài khoản Khách Hàng"""
     if current_user:
         return RedirectResponse(url="/")
-    return templates.TemplateResponse("register.html", {
+    return templates.TemplateResponse(request=request, name="register.html", context={
         "request": request,
         "current_user": None
     })
@@ -125,7 +159,7 @@ def view_shopee_store(
     """Trang chủ mua sắm Shopaa Mall thuần túy cho khách hàng"""
     categories = db.query(Category).order_by(Category.id.asc()).all()
     products = db.query(Product).order_by(Product.id.asc()).all()
-    return templates.TemplateResponse("shopee_store.html", {
+    return templates.TemplateResponse(request=request, name="shopee_store.html", context={
         "request": request,
         "categories": categories,
         "products": products,
@@ -143,7 +177,7 @@ def view_my_orders(
     current_user: Optional[User] = Depends(get_current_user)
 ):
     """Trang 'Đơn Mua Của Tôi' của khách hàng"""
-    query = db.query(Order)
+    query = db.query(Order).options(selectinload(Order.items), selectinload(Order.logs))
     
     # Nếu người mua đã đăng nhập và có đơn riêng, chỉ hiển thị đơn của người đó
     if current_user and current_user.role == "buyer":
@@ -151,10 +185,9 @@ def view_my_orders(
         if user_orders_count > 0:
             query = query.filter(Order.user_id == current_user.id)
             
-    if status:
-        query = query.filter(Order.status == status)
-    orders = query.order_by(Order.id.desc()).all()
-    return templates.TemplateResponse("my_orders.html", {
+    all_orders = query.order_by(Order.id.desc()).all()
+    orders = filter_orders_by_tab(all_orders, status) if status else all_orders
+    return templates.TemplateResponse(request=request, name="my_orders.html", context={
         "request": request,
         "orders": orders,
         "current_status": status,
@@ -169,10 +202,15 @@ def view_order_tracking(
     current_user: Optional[User] = Depends(get_current_user)
 ):
     """Trang theo dõi tiến trình vận chuyển bưu kiện (Live Tracking Timeline)"""
-    order = db.query(Order).filter(Order.id == order_id).first()
+    order = (
+        db.query(Order)
+        .options(selectinload(Order.items), selectinload(Order.logs))
+        .filter(Order.id == order_id)
+        .first()
+    )
     if not order:
         raise HTTPException(status_code=404, detail="Không tìm thấy đơn hàng")
-    return templates.TemplateResponse("order_tracking.html", {
+    return templates.TemplateResponse(request=request, name="order_tracking.html", context={
         "request": request,
         "order": order,
         "current_user": current_user
@@ -186,10 +224,15 @@ def view_order_success(
     current_user: Optional[User] = Depends(get_current_user)
 ):
     """Trang thông báo đặt hàng thành công chuẩn Người Mua (Không in tem, không mã tuyến kho)"""
-    order = db.query(Order).filter(Order.id == order_id).first()
+    order = (
+        db.query(Order)
+        .options(selectinload(Order.items))
+        .filter(Order.id == order_id)
+        .first()
+    )
     if not order:
         raise HTTPException(status_code=404, detail="Không tìm thấy đơn hàng")
-    return templates.TemplateResponse("order_success.html", {
+    return templates.TemplateResponse(request=request, name="order_success.html", context={
         "request": request,
         "order": order,
         "current_user": current_user
@@ -214,18 +257,17 @@ def view_seller_centre(
     from api.api_seller import get_seller_stats
     stats = get_seller_stats(db)
 
-    query = db.query(Order)
-    if status and status != "ALL":
-        query = query.filter(Order.status == status)
+    query = db.query(Order).options(selectinload(Order.items), selectinload(Order.logs))
     if q:
         query = query.filter(
             (Order.tracking_code.ilike(f"%{q}%")) |
             (Order.order_code.ilike(f"%{q}%")) |
             (Order.recipient_name.ilike(f"%{q}%"))
         )
-    orders = query.order_by(Order.id.desc()).all()
+    all_orders = query.order_by(Order.id.desc()).all()
+    orders = filter_orders_by_tab(all_orders, status)
 
-    return templates.TemplateResponse("seller_centre.html", {
+    return templates.TemplateResponse(request=request, name="seller_centre.html", context={
         "request": request,
         "orders": orders,
         "stats": stats,
@@ -242,10 +284,15 @@ def view_shipping_label(
     current_user: Optional[User] = Depends(get_current_user)
 ):
     """Phiếu mã vận đơn chuẩn Shopaa Express A7 (In tem bưu kiện từ Kênh Người Bán)"""
-    order = db.query(Order).filter(Order.id == order_id).first()
+    order = (
+        db.query(Order)
+        .options(selectinload(Order.items))
+        .filter(Order.id == order_id)
+        .first()
+    )
     if not order:
         raise HTTPException(status_code=404, detail="Không tìm thấy đơn hàng")
-    return templates.TemplateResponse("shipping_label.html", {
+    return templates.TemplateResponse(request=request, name="shipping_label.html", context={
         "request": request,
         "order": order,
         "current_user": current_user
@@ -266,7 +313,7 @@ def view_spx_hub(
     if not sample_orders:
         sample_orders = db.query(Order).limit(5).all()
 
-    return templates.TemplateResponse("spx_hub.html", {
+    return templates.TemplateResponse(request=request, name="spx_hub.html", context={
         "request": request,
         "sample_orders": sample_orders,
         "current_user": current_user

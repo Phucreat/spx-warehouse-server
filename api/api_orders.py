@@ -1,6 +1,6 @@
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 from database import get_db
 from models import Order
 from schemas import OrderResponse
@@ -18,7 +18,7 @@ def get_orders(
     db: Session = Depends(get_db)
 ):
     """Lấy danh sách đơn hàng cho giao diện quản trị kho & in tem"""
-    query = db.query(Order)
+    query = db.query(Order).options(selectinload(Order.items), selectinload(Order.logs))
     if status:
         query = query.filter(Order.status == status)
     if chute_id is not None:
@@ -35,7 +35,7 @@ def get_orders(
 @router.get("/{id_or_code}", response_model=OrderResponse)
 def get_order_by_id_or_code(id_or_code: str, db: Session = Depends(get_db)):
     """Tìm đơn hàng theo ID, mã đơn hàng hoặc mã vận đơn SPX"""
-    query = db.query(Order)
+    query = db.query(Order).options(selectinload(Order.items), selectinload(Order.logs))
     if id_or_code.isdigit():
         order = query.filter((Order.id == int(id_or_code)) | (Order.order_code == id_or_code)).first()
     else:
@@ -54,6 +54,6 @@ def update_order_status(order_id: int, status: str, db: Session = Depends(get_db
     
     order.status = status
     if status == "SORTED":
-        order.sorted_at = datetime.datetime.now(datetime.timezone.utc)
+        order.sorted_at = datetime.datetime.utcnow()
     db.commit()
     return {"success": True, "message": f"Đã cập nhật trạng thái đơn hàng sang {status}"}

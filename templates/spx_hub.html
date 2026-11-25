@@ -16,25 +16,26 @@
   <header class="bg-black border-b border-gray-800 sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-16">
       <div class="flex items-center space-x-3">
-        <img src="/static/images/spx_logo.svg" alt="Shopaa Express" class="h-8 w-auto">
+        <a href="/" class="flex items-center space-x-3">
+          <img src="/static/images/spx_logo.svg" alt="Shopaa Express" class="h-8 w-auto">
+        </a>
         <span class="text-xs font-mono font-bold bg-orange-950 text-orange-400 px-2.5 py-1 rounded border border-orange-800">
           BN_MEGA_SOC_ROBOTICS
         </span>
       </div>
 
       <div class="flex items-center space-x-4 text-xs font-semibold">
-        <div class="flex items-center space-x-2 bg-red-950/70 text-red-300 border border-red-800/80 px-3 py-1.5 rounded-full font-bold uppercase tracking-wider text-[11px]">
-          <i class="fa-solid fa-shield-halved text-red-400"></i>
-          <span>NỘI BỘ TRỤ SỞ SPX (SOC OPS)</span>
-        </div>
-        <span class="text-gray-700">|</span>
+        <a href="/seller" class="hidden md:flex items-center text-gray-400 hover:text-orange-400">
+          <i class="fa-solid fa-shop mr-1.5 text-orange-400"></i> Kênh Người Bán
+        </a>
+        <span class="text-gray-700 hidden md:inline">|</span>
         <a href="/docs" target="_blank" class="text-gray-400 hover:text-green-400 flex items-center">
-          <i class="fa-solid fa-code mr-1.5 text-green-400"></i> REST API Hiện Trường
+          <i class="fa-solid fa-code mr-1.5 text-green-400"></i> REST API
         </a>
         <span class="text-gray-700">|</span>
         <div class="flex items-center space-x-2 bg-gray-800 px-3 py-1.5 rounded-full border border-gray-700">
           <span id="wsStatusDot" class="w-2.5 h-2.5 rounded-full bg-green-500 animate-ping inline-block"></span>
-          <span id="wsStatusText" class="text-green-400 font-mono">PC CONTROL: SẴN SÀNG</span>
+          <span id="wsStatusText" class="text-green-400 font-mono">SUPABASE SYNC: SẴN SÀNG</span>
         </div>
       </div>
     </div>
@@ -51,12 +52,12 @@
           TRUNG TÂM PHÂN LOẠI SPX MEGA SOC PHÙ CHẨN (BẮC NINH)
         </h1>
         <p class="text-xs text-gray-400 mt-0.5">
-          Giao thức trao đổi CSDL thời gian thực với PC Control Hiện Trường (Webcam 2K + Bo mạch Arduino/ESP32)
+          Đồng bộ thời gian thực qua Supabase với <strong class="text-orange-300">Software-PC Control</strong> (SortingStation • Webcam 2K • Băng tải ESP32 • Robot 6 trục)
         </p>
       </div>
       <div class="text-right font-mono text-xs text-gray-400">
-        <div>Vị trí: KCN VSIP, Từ Sơn, Bắc Ninh</div>
-        <div class="text-green-400">Mô hình: 5 Tuyến Liên Tỉnh + 1 Sọt Lỗi</div>
+        <div>Tổng lượt Camera kiểm định: <span id="statInspections" class="text-orange-400 font-bold">0</span></div>
+        <div class="text-green-400">5 Tuyến Liên Tỉnh → 3 Thùng Robot 6 Trục</div>
       </div>
     </div>
 
@@ -67,131 +68,176 @@
         <div class="text-2xl font-black text-white mt-1 font-mono" id="statTotal">--</div>
       </div>
       <div class="bg-gray-800/80 p-3.5 rounded-xl border border-gray-700">
-        <div class="text-[10px] font-mono text-blue-400 uppercase">Đã Nhập Kho Chờ Lên Băng</div>
+        <div class="text-[10px] font-mono text-blue-400 uppercase">Chờ Lên Băng Tải</div>
         <div class="text-2xl font-black text-blue-400 mt-1 font-mono" id="statPending">--</div>
       </div>
       <div class="bg-gray-800/80 p-3.5 rounded-xl border border-gray-700">
-        <div class="text-[10px] font-mono text-yellow-400 uppercase">Đang Qua Trạm Camera</div>
-        <div class="text-2xl font-black text-yellow-400 mt-1 font-mono" id="statInSorting">--</div>
+        <div class="text-[10px] font-mono text-yellow-400 uppercase">Cần Xem Lại (Review)</div>
+        <div class="text-2xl font-black text-yellow-400 mt-1 font-mono" id="statManualReview">--</div>
       </div>
       <div class="bg-gray-800/80 p-3.5 rounded-xl border border-gray-700">
-        <div class="text-[10px] font-mono text-green-400 uppercase">Đã Vào Rổ Thành Công</div>
+        <div class="text-[10px] font-mono text-green-400 uppercase">Đã Phân Loại (PASS)</div>
         <div class="text-2xl font-black text-green-400 mt-1 font-mono" id="statSorted">--</div>
       </div>
       <div class="bg-gray-800/80 p-3.5 rounded-xl border border-gray-700">
-        <div class="text-[10px] font-mono text-red-400 uppercase">Sọt Lỗi (Quét 3 Lần Lỗi)</div>
+        <div class="text-[10px] font-mono text-red-400 uppercase">Sọt Lỗi / Ngoại Lệ</div>
         <div class="text-2xl font-black text-red-400 mt-1 font-mono" id="statRejected">--</div>
       </div>
     </div>
 
     <!-- CONVEYOR BELT TWIN (MÔ HÌNH DÂY CHUYỀN SCADA) -->
-    <div class="bg-gray-800/90 rounded-2xl p-6 border border-gray-700 shadow-2xl">
+    <div class="bg-gray-800/90 rounded-2xl p-6 border border-gray-700 shadow-2xl space-y-5">
       
       <!-- Gantry Scanner Header -->
-      <div class="flex items-center justify-between bg-black/60 border border-gray-700 p-3.5 rounded-xl mb-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-black/60 border border-gray-700 p-3.5 rounded-xl">
         <div class="flex items-center space-x-3">
           <div class="w-10 h-10 bg-orange-600/30 text-orange-400 rounded-lg flex items-center justify-center text-xl border border-orange-500/40">
             <i class="fa-solid fa-camera"></i>
           </div>
           <div>
             <div class="text-xs font-bold text-white flex items-center font-mono">
-              TRẠM THỊ GIÁC MÁY TÍNH (WEBCAM 2K + ĐÈN GÁ 3D HIỆN TRƯỜNG)
+              TRẠM VISION-01 (WEBCAM 2K + BĂNG TẢI ESP32/W5500 + CÁNH TAY ROBOT 6 TRỤC)
               <span class="ml-2 w-2 h-2 rounded-full bg-green-400 animate-ping"></span>
             </div>
             <div class="text-[11px] text-gray-400">
-              Tra soát CSDL API <code class="text-yellow-300 font-mono">GET /api/v1/sort/lookup?code=...</code> • Điều khiển UART Bo Mạch
+              Tra cứu <code class="text-yellow-300 font-mono">public.orders</code> • Ghi kết quả <code class="text-green-300 font-mono">public.sorting_logs</code> • Trigger tự động đồng bộ trạng thái
             </div>
           </div>
         </div>
         
         <div id="lastScannedBadge" class="hidden sm:flex items-center space-x-2 bg-gray-900 px-3 py-1.5 rounded-lg border border-gray-700 font-mono text-xs">
           <span class="text-gray-400">Vừa Nhận Diện:</span>
-          <span id="lastScannedCode" class="text-yellow-400 font-bold">SPXVN...</span>
+          <span id="lastScannedCode" class="text-yellow-400 font-bold">Chưa có</span>
         </div>
       </div>
 
       <!-- Main Conveyor Belt Track -->
-      <div class="relative py-2">
+      <div class="relative">
         <div class="h-14 bg-gray-900 rounded-xl border-2 border-dashed border-gray-600 flex items-center justify-between px-4 relative overflow-hidden">
           <div class="absolute inset-0 bg-[linear-gradient(90deg,transparent_0%,rgba(255,255,255,0.06)_50%,transparent_100%)] animate-[shimmer_2s_infinite]"></div>
-          <span class="text-[11px] font-mono text-gray-400 font-bold tracking-wider">
-            <i class="fa-solid fa-arrow-right text-orange-400 mr-1.5"></i> BĂNG TẢI CHÍNH KHO PHÙ CHẨN (HƯỚNG BƯU KIỆN CHẠY) <i class="fa-solid fa-arrow-right text-orange-400 ml-1.5"></i>
+          <span class="text-[11px] font-mono text-gray-300 font-bold tracking-wider">
+            <i class="fa-solid fa-arrow-right text-orange-400 mr-1.5"></i> CAMERA DỪNG KIỆN (PWM 40) → CẢM BIẾN ĐIỂM GẮP (2200ms) → ROBOT 6 TRỤC HÚT THẢ <i class="fa-solid fa-arrow-right text-orange-400 ml-1.5"></i>
           </span>
-          <span class="text-[11px] font-mono text-red-400 font-bold">
-            CUỐI BĂNG TẢI: SỌT LỖI (REJECT CHUTE) <i class="fa-solid fa-angles-right ml-1"></i>
+          <span class="text-[11px] font-mono text-red-400 font-bold hidden md:inline">
+            KIỆN REJECT / REVIEW: RƠI CUỐI BĂNG (THÙNG LỖI) <i class="fa-solid fa-angles-right ml-1"></i>
           </span>
         </div>
       </div>
 
-      <!-- Chutes Grid (5 Rổ + 1 Sọt Lỗi) -->
-      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 mt-4">
-        
-        <!-- RỔ 1 -->
-        <div id="chuteBox-1" class="bg-gray-900/90 border-2 border-blue-500/40 rounded-xl p-3 text-center transition-all duration-300">
-          <div class="text-[10px] font-bold text-blue-400 uppercase font-mono">RỔ 1</div>
-          <div class="text-xs font-black text-white mt-0.5 truncate">HN CENTRAL</div>
-          <div class="text-[9px] text-gray-400">Hà Nội</div>
-          <div class="text-2xl font-black text-blue-400 mt-2 font-mono" id="chuteCount-1">0</div>
-          <div class="mt-1 text-[9px] font-mono bg-blue-950 text-blue-300 py-0.5 rounded border border-blue-800">
-            HN-29-xx
+      <!-- 3 THÙNG VẬT LÝ CỦA ROBOT 6 TRỤC (KHỚP SORTINGSTATION CONFIG/STATION.YAML) -->
+      <div>
+        <div class="text-[11px] font-mono font-bold text-gray-400 uppercase mb-2 flex items-center">
+          <i class="fa-solid fa-robot text-orange-400 mr-1.5"></i>
+          3 Thùng Vật Lý Tại Hiện Trường (Ánh xạ tự động từ 5 Tuyến Hub trên phiếu A7)
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <!-- THÙNG ĐỒNG BẰNG -->
+          <div id="robotBin-DONG_BANG" class="bg-gray-900/95 border-2 border-emerald-500/50 rounded-xl p-3.5 flex items-center justify-between transition-all duration-300">
+            <div>
+              <div class="text-xs font-black text-emerald-400 font-mono">THÙNG ĐỒNG BẰNG (DONG_BANG)</div>
+              <div class="text-[11px] text-gray-300 mt-0.5">Nhận kiện PASS thuộc <strong>Rổ 1, Rổ 3, Rổ 5</strong></div>
+              <div class="text-[10px] text-gray-500">Hà Nội • Hải Phòng - Quảng Ninh • Nam Định - Thanh Hóa</div>
+            </div>
+            <div class="text-3xl font-black text-emerald-400 font-mono pl-3" id="robotBinCount-DONG_BANG">0</div>
+          </div>
+
+          <!-- THÙNG TRUNG DU - MIỀN NÚI -->
+          <div id="robotBin-TRUNG_DU" class="bg-gray-900/95 border-2 border-blue-500/50 rounded-xl p-3.5 flex items-center justify-between transition-all duration-300">
+            <div>
+              <div class="text-xs font-black text-blue-400 font-mono">THÙNG TRUNG DU - MN (TRUNG_DU)</div>
+              <div class="text-[11px] text-gray-300 mt-0.5">Nhận kiện PASS thuộc <strong>Rổ 2, Rổ 4</strong></div>
+              <div class="text-[10px] text-gray-500">Bắc Ninh - Bắc Giang - Lạng Sơn • Thái Nguyên - Phú Thọ</div>
+            </div>
+            <div class="text-3xl font-black text-blue-400 font-mono pl-3" id="robotBinCount-TRUNG_DU">0</div>
+          </div>
+
+          <!-- THÙNG LỖI -->
+          <div id="robotBin-LOI" class="bg-gray-900/95 border-2 border-red-500/50 rounded-xl p-3.5 flex items-center justify-between transition-all duration-300">
+            <div>
+              <div class="text-xs font-black text-red-400 font-mono">THÙNG LỖI (LOI / REJECT)</div>
+              <div class="text-[11px] text-gray-300 mt-0.5">Nhận kiện <strong>REJECT, MANUAL_REVIEW, Rổ 0</strong></div>
+              <div class="text-[10px] text-gray-500">QR rách/mờ, thiếu logo, móp thùng hoặc mã lạ</div>
+            </div>
+            <div class="text-3xl font-black text-red-400 font-mono pl-3" id="robotBinCount-LOI">0</div>
           </div>
         </div>
+      </div>
 
-        <!-- RỔ 2 -->
-        <div id="chuteBox-2" class="bg-gray-900/90 border-2 border-green-500/40 rounded-xl p-3 text-center transition-all duration-300">
-          <div class="text-[10px] font-bold text-green-400 uppercase font-mono">RỔ 2</div>
-          <div class="text-xs font-black text-white mt-0.5 truncate">BN-BG HUB</div>
-          <div class="text-[9px] text-gray-400">Bắc Ninh - BG</div>
-          <div class="text-2xl font-black text-green-400 mt-2 font-mono" id="chuteCount-2">0</div>
-          <div class="mt-1 text-[9px] font-mono bg-green-950 text-green-300 py-0.5 rounded border border-green-800">
-            BN-99-xx
-          </div>
+      <!-- Chutes Grid (5 Rổ Tuyến Hub Logic + 1 Sọt Lỗi) -->
+      <div>
+        <div class="text-[11px] font-mono font-bold text-gray-400 uppercase mb-2 flex items-center">
+          <i class="fa-solid fa-sitemap text-blue-400 mr-1.5"></i>
+          5 Tuyến Hub Phân Loại Logic Trên CSDL (Chute 1..5 & Chute 0)
         </div>
-
-        <!-- RỔ 3 -->
-        <div id="chuteBox-3" class="bg-gray-900/90 border-2 border-cyan-500/40 rounded-xl p-3 text-center transition-all duration-300">
-          <div class="text-[10px] font-bold text-cyan-400 uppercase font-mono">RỔ 3</div>
-          <div class="text-xs font-black text-white mt-0.5 truncate">HP-QN HUB</div>
-          <div class="text-[9px] text-gray-400">Hải Phòng - QN</div>
-          <div class="text-2xl font-black text-cyan-400 mt-2 font-mono" id="chuteCount-3">0</div>
-          <div class="mt-1 text-[9px] font-mono bg-cyan-950 text-cyan-300 py-0.5 rounded border border-cyan-800">
-            HP-16-xx
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+          
+          <!-- RỔ 1 -->
+          <div id="chuteBox-1" class="bg-gray-900/90 border-2 border-blue-500/40 rounded-xl p-3 text-center transition-all duration-300">
+            <div class="text-[10px] font-bold text-blue-400 uppercase font-mono">RỔ 1 → ĐỒNG BẰNG</div>
+            <div class="text-xs font-black text-white mt-0.5 truncate">HN CENTRAL</div>
+            <div class="text-[9px] text-gray-400">Hà Nội</div>
+            <div class="text-2xl font-black text-blue-400 mt-2 font-mono" id="chuteCount-1">0</div>
+            <div class="mt-1 text-[9px] font-mono bg-blue-950 text-blue-300 py-0.5 rounded border border-blue-800">
+              HN-29-xx
+            </div>
           </div>
-        </div>
 
-        <!-- RỔ 4 -->
-        <div id="chuteBox-4" class="bg-gray-900/90 border-2 border-amber-500/40 rounded-xl p-3 text-center transition-all duration-300">
-          <div class="text-[10px] font-bold text-amber-400 uppercase font-mono">RỔ 4</div>
-          <div class="text-xs font-black text-white mt-0.5 truncate">TN-PT HUB</div>
-          <div class="text-[9px] text-gray-400">Thái Nguyên - PT</div>
-          <div class="text-2xl font-black text-amber-400 mt-2 font-mono" id="chuteCount-4">0</div>
-          <div class="mt-1 text-[9px] font-mono bg-amber-950 text-amber-300 py-0.5 rounded border border-amber-800">
-            TN-20-xx
+          <!-- RỔ 2 -->
+          <div id="chuteBox-2" class="bg-gray-900/90 border-2 border-green-500/40 rounded-xl p-3 text-center transition-all duration-300">
+            <div class="text-[10px] font-bold text-green-400 uppercase font-mono">RỔ 2 → TRUNG DU</div>
+            <div class="text-xs font-black text-white mt-0.5 truncate">BN-BG HUB</div>
+            <div class="text-[9px] text-gray-400">Bắc Ninh - BG</div>
+            <div class="text-2xl font-black text-green-400 mt-2 font-mono" id="chuteCount-2">0</div>
+            <div class="mt-1 text-[9px] font-mono bg-green-950 text-green-300 py-0.5 rounded border border-green-800">
+              BN-99-xx
+            </div>
           </div>
-        </div>
 
-        <!-- RỔ 5 -->
-        <div id="chuteBox-5" class="bg-gray-900/90 border-2 border-purple-500/40 rounded-xl p-3 text-center transition-all duration-300">
-          <div class="text-[10px] font-bold text-purple-400 uppercase font-mono">RỔ 5</div>
-          <div class="text-xs font-black text-white mt-0.5 truncate">ND-TH HUB</div>
-          <div class="text-[9px] text-gray-400">Nam Định - TH</div>
-          <div class="text-2xl font-black text-purple-400 mt-2 font-mono" id="chuteCount-5">0</div>
-          <div class="mt-1 text-[9px] font-mono bg-purple-950 text-purple-300 py-0.5 rounded border border-purple-800">
-            ND-18-xx
+          <!-- RỔ 3 -->
+          <div id="chuteBox-3" class="bg-gray-900/90 border-2 border-cyan-500/40 rounded-xl p-3 text-center transition-all duration-300">
+            <div class="text-[10px] font-bold text-cyan-400 uppercase font-mono">RỔ 3 → ĐỒNG BẰNG</div>
+            <div class="text-xs font-black text-white mt-0.5 truncate">HP-QN HUB</div>
+            <div class="text-[9px] text-gray-400">Hải Phòng - QN</div>
+            <div class="text-2xl font-black text-cyan-400 mt-2 font-mono" id="chuteCount-3">0</div>
+            <div class="mt-1 text-[9px] font-mono bg-cyan-950 text-cyan-300 py-0.5 rounded border border-cyan-800">
+              HP-16-xx
+            </div>
           </div>
-        </div>
 
-        <!-- RỔ 0: SỌT LỖI -->
-        <div id="chuteBox-0" class="bg-gray-900/90 border-2 border-red-500/40 rounded-xl p-3 text-center transition-all duration-300">
-          <div class="text-[10px] font-bold text-red-400 uppercase font-mono">SỌT LỖI</div>
-          <div class="text-xs font-black text-white mt-0.5 truncate">REJECT BIN</div>
-          <div class="text-[9px] text-gray-400">Quét 3 lần lỗi</div>
-          <div class="text-2xl font-black text-red-400 mt-2 font-mono" id="chuteCount-0">0</div>
-          <div class="mt-1 text-[9px] font-mono bg-red-950 text-red-300 py-0.5 rounded border border-red-800">
-            ERR-REJECT
+          <!-- RỔ 4 -->
+          <div id="chuteBox-4" class="bg-gray-900/90 border-2 border-amber-500/40 rounded-xl p-3 text-center transition-all duration-300">
+            <div class="text-[10px] font-bold text-amber-400 uppercase font-mono">RỔ 4 → TRUNG DU</div>
+            <div class="text-xs font-black text-white mt-0.5 truncate">TN-PT HUB</div>
+            <div class="text-[9px] text-gray-400">Thái Nguyên - PT</div>
+            <div class="text-2xl font-black text-amber-400 mt-2 font-mono" id="chuteCount-4">0</div>
+            <div class="mt-1 text-[9px] font-mono bg-amber-950 text-amber-300 py-0.5 rounded border border-amber-800">
+              TN-20-xx
+            </div>
           </div>
-        </div>
 
+          <!-- RỔ 5 -->
+          <div id="chuteBox-5" class="bg-gray-900/90 border-2 border-purple-500/40 rounded-xl p-3 text-center transition-all duration-300">
+            <div class="text-[10px] font-bold text-purple-400 uppercase font-mono">RỔ 5 → ĐỒNG BẰNG</div>
+            <div class="text-xs font-black text-white mt-0.5 truncate">ND-TH HUB</div>
+            <div class="text-[9px] text-gray-400">Nam Định - TH</div>
+            <div class="text-2xl font-black text-purple-400 mt-2 font-mono" id="chuteCount-5">0</div>
+            <div class="mt-1 text-[9px] font-mono bg-purple-950 text-purple-300 py-0.5 rounded border border-purple-800">
+              ND-18-xx
+            </div>
+          </div>
+
+          <!-- RỔ 0: SỌT LỖI -->
+          <div id="chuteBox-0" class="bg-gray-900/90 border-2 border-red-500/40 rounded-xl p-3 text-center transition-all duration-300">
+            <div class="text-[10px] font-bold text-red-400 uppercase font-mono">SỌT LỖI → LOI</div>
+            <div class="text-xs font-black text-white mt-0.5 truncate">REJECT BIN</div>
+            <div class="text-[9px] text-gray-400">Ngoại lệ / Lỗi tem</div>
+            <div class="text-2xl font-black text-red-400 mt-2 font-mono" id="chuteCount-0">0</div>
+            <div class="mt-1 text-[9px] font-mono bg-red-950 text-red-300 py-0.5 rounded border border-red-800">
+              ERR-REJECT
+            </div>
+          </div>
+
+        </div>
       </div>
     </div>
 
@@ -203,20 +249,20 @@
         <div>
           <h3 class="text-sm font-bold text-white mb-2 flex items-center font-mono">
             <i class="fa-solid fa-barcode text-orange-400 mr-2"></i>
-            BÀN ĐIỀU KHIỂN THỬ NGHIỆM TẠI CHỖ (TEST SCAN)
+            BÀN KIỂM TRA ĐỊNH TUYẾN TẠI CHỖ (MÔ PHỎNG KHÔNG GHI ĐÈ ĐƠN)
           </h3>
           <p class="text-xs text-gray-400 mb-4">
-            Giả lập PC Control gửi mã quét để kiểm tra phản hồi của CSDL và thuật toán phân rổ:
+            Tra cứu thử mã vận đơn để xem ánh xạ Rổ Hub (1..5) và Thùng Robot (ĐỒNG BẰNG / TRUNG DU / LỖI):
           </p>
 
           <div class="space-y-3">
             <div>
-              <label class="block text-[11px] font-mono text-gray-300 mb-1">Nhập mã Barcode / QR quét được:</label>
+              <label class="block text-[11px] font-mono text-gray-300 mb-1">Nhập mã Barcode / QR cần kiểm tra:</label>
               <div class="flex space-x-2">
                 <input type="text" id="testBarcode" placeholder="VD: SPXVN..."
                        class="flex-grow px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-xs font-mono text-white focus:border-orange-500 focus:outline-none">
                 <button onclick="simulateScan()" class="bg-orange-600 hover:bg-orange-500 text-white text-xs font-bold px-4 py-2 rounded-lg font-mono transition">
-                  Gửi API
+                  Tra Thử
                 </button>
               </div>
             </div>
@@ -233,16 +279,16 @@
                 {% endfor %}
                 <button onclick="setTestCode('SPX_INVALID_ERROR_CODE_999')" class="p-2 bg-red-950/40 hover:bg-red-900/60 border border-red-800 rounded-lg text-left truncate text-red-300">
                   <span class="text-red-400 font-bold block">TEST_SỌT_LỖI</span>
-                  <span class="text-[10px] text-gray-400">Quét 3 lần không hợp lệ</span>
+                  <span class="text-[10px] text-gray-400">Mã không có trong CSDL</span>
                 </button>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="mt-4 p-3 bg-gray-900/80 rounded-xl border border-gray-700 text-xs text-gray-400">
+        <div class="mt-4 p-3 bg-gray-900/80 rounded-xl border border-gray-700 text-xs text-gray-400 leading-relaxed">
           <i class="fa-solid fa-microchip text-green-400 mr-1.5"></i>
-          Script PC Control thực tế chạy tại: <code class="font-mono text-yellow-300">python cv_station_mock.py</code> (kết nối Webcam 2K & cổng COM Bo mạch).
+          Trạm hiện trường chạy <code class="font-mono text-yellow-300">SortingStation\run_station.bat</code> sẽ ghi thẳng vào bảng <code class="font-mono text-green-300">sorting_logs</code> trên Supabase và tự động phát trực tiếp lên màn hình SCADA này.
         </div>
       </div>
 
@@ -253,7 +299,7 @@
             <span class="w-3 h-3 rounded-full bg-red-500"></span>
             <span class="w-3 h-3 rounded-full bg-yellow-500"></span>
             <span class="w-3 h-3 rounded-full bg-green-500"></span>
-            <span class="text-gray-300 font-bold text-xs ml-2">LIVE SCADA LOG: TRA SOÁT CSDL HIỆN TRƯỜNG</span>
+            <span class="text-gray-300 font-bold text-xs ml-2">LIVE SCADA LOG: ĐỒNG BỘ SUPABASE & PC-CONTROL</span>
           </div>
           <button onclick="clearLogs()" class="text-[10px] text-gray-500 hover:text-gray-300">
             <i class="fa-solid fa-trash mr-1"></i> Xóa log
@@ -261,10 +307,43 @@
         </div>
 
         <div id="logConsole" class="flex-grow overflow-y-auto space-y-1.5 h-64 max-h-72 pr-2 text-[11px] leading-relaxed">
-          <div class="text-gray-500">[HỆ THỐNG] Đang thiết lập kết nối WebSocket với Server CSDL...</div>
+          <div class="text-gray-500">[HỆ THỐNG] Đang thiết lập kết nối WebSocket & tải nhật ký kiểm định từ Supabase...</div>
         </div>
       </div>
 
+    </div>
+
+    <!-- Recent Real Station Inspections Table (sorting_logs) -->
+    <div class="bg-gray-800/90 rounded-2xl border border-gray-700 overflow-hidden">
+      <div class="px-5 py-3.5 border-b border-gray-700 flex justify-between items-center">
+        <h3 class="text-xs font-bold font-mono text-white flex items-center uppercase">
+          <i class="fa-solid fa-table-list text-orange-400 mr-2"></i>
+          Nhật Ký Kiểm Định Hiện Trường Gần Nhất (Bảng <code class="mx-1 text-green-400">sorting_logs</code> từ Software-PC Control)
+        </h3>
+        <button onclick="fetchRecentLogs(false)" class="text-[11px] font-mono text-gray-400 hover:text-white">
+          <i class="fa-solid fa-rotate mr-1"></i> Làm mới
+        </button>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-700 text-left text-xs font-mono">
+          <thead class="bg-gray-900/70 text-gray-400 text-[10px] uppercase">
+            <tr>
+              <th class="py-2.5 px-4">Giờ (VN)</th>
+              <th class="py-2.5 px-4">Trạm</th>
+              <th class="py-2.5 px-4">Mã Vận Đơn</th>
+              <th class="py-2.5 px-4">Quyết Định</th>
+              <th class="py-2.5 px-4">Rổ Hub / Thùng Robot</th>
+              <th class="py-2.5 px-4">QR / Logo / Hư Hỏng</th>
+              <th class="py-2.5 px-4">Chi Tiết / Lý Do</th>
+            </tr>
+          </thead>
+          <tbody id="recentLogsBody" class="divide-y divide-gray-800 text-gray-200 text-[11px]">
+            <tr>
+              <td colspan="7" class="py-6 text-center text-gray-500">Chưa có bản ghi kiểm định nào từ trạm PC-Control.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
   </main>
@@ -280,8 +359,8 @@
 
       socket.onopen = function() {
         document.getElementById('wsStatusDot').className = 'w-2.5 h-2.5 rounded-full bg-green-500 animate-ping inline-block';
-        document.getElementById('wsStatusText').innerText = 'PC CONTROL: SẴN SÀNG';
-        addLog('[KẾT NỐI] Kênh dữ liệu SCADA Phù Chẩn đã thông suốt.', 'text-green-400');
+        document.getElementById('wsStatusText').innerText = 'SUPABASE SYNC: TRỰC TUYẾN';
+        addLog('[KẾT NỐI] Kênh đồng bộ thời gian thực SCADA ↔ Supabase ↔ PC-Control đã thông suốt.', 'text-green-400');
       };
 
       socket.onmessage = function(event) {
@@ -301,19 +380,44 @@
     }
 
     function handleSocketEvent(data) {
-      if (data.event === 'SCAN_SUCCESS') {
-        addLog(`[${data.timestamp}] CAMERA NHẬN DIỆN: Mã ${data.tracking_code} -> Chỉ định: RỔ ${data.chute_id} (${data.destination_hub})`, 'text-yellow-300');
+      if (data.event === 'STATION_INSPECTION') {
+        const dec = data.decision || data.status;
+        const station = data.station_id || 'VISION-01';
+        const reason = data.reason || data.notes || '';
+        const color = dec === 'PASS' ? 'text-green-400 font-bold' : (dec === 'MANUAL_REVIEW' ? 'text-yellow-300 font-bold' : 'text-red-400 font-bold');
+        addLog(
+          `[${data.timestamp}] [${station}] Mã ${data.tracking_code} • ${dec} → RỔ ${data.chute_id} (${data.robot_bin_label}) • ${reason}`,
+          color
+        );
         highlightChute(data.chute_id);
+        highlightRobotBin(data.robot_bin);
+        document.getElementById('lastScannedBadge').classList.remove('hidden');
+        document.getElementById('lastScannedCode').innerText = `${data.tracking_code} (${dec})`;
+        fetchStats();
+        fetchRecentLogs(false);
+      } else if (data.event === 'SCAN_SUCCESS') {
+        addLog(`[${data.timestamp}] TRA CỨU: Mã ${data.tracking_code} → RỔ ${data.chute_id} (${data.destination_hub}) → ${data.robot_bin_label || ''}`, 'text-yellow-300');
+        highlightChute(data.chute_id);
+        if (data.robot_bin) highlightRobotBin(data.robot_bin);
         document.getElementById('lastScannedBadge').classList.remove('hidden');
         document.getElementById('lastScannedCode').innerText = data.tracking_code;
       } else if (data.event === 'SCAN_FAILED') {
         addLog(`[${data.timestamp}] CẢNH BÁO: ${data.message} (${data.code})`, 'text-red-400 font-bold');
         highlightChute(0);
+        highlightRobotBin('LOI');
       } else if (data.event === 'SORT_CONFIRMED') {
-        addLog(`[${data.timestamp}] CHẤP HÀNH: Cơ cấu gạt đã đẩy bưu kiện vào RỔ ${data.chute_id} thành công!`, 'text-green-400 font-bold');
+        const prefix = data.simulated ? '[MÔ PHỎNG WEB]' : '[XÁC NHẬN API]';
+        const color = data.chute_id > 0 ? 'text-emerald-400 font-bold' : 'text-red-400 font-bold';
+        addLog(`[${data.timestamp}] ${prefix} Bưu kiện ${data.tracking_code} → RỔ ${data.chute_id} (${data.robot_bin_label || ''})`, color);
+        highlightChute(data.chute_id);
+        if (data.robot_bin) highlightRobotBin(data.robot_bin);
         fetchStats();
+        if (!data.simulated) fetchRecentLogs(false);
       } else if (data.event === 'PARCEL_ARRIVED_HUB') {
         addLog(`[${data.timestamp}] NHẬP KHO: Shop vừa bàn giao đơn ${data.tracking_code} lên băng tải Phù Chẩn!`, 'text-cyan-300');
+        fetchStats();
+      } else if (data.event === 'NEW_ORDER_PLACED') {
+        addLog(`[${data.timestamp}] ĐƠN MỚI: Khách ${data.recipient} vừa đặt đơn ${data.tracking_code}`, 'text-blue-300');
         fetchStats();
       }
     }
@@ -324,6 +428,16 @@
         box.classList.add('animate-chute-active', 'bg-white/20');
         setTimeout(() => {
           box.classList.remove('animate-chute-active', 'bg-white/20');
+        }, 3000);
+      }
+    }
+
+    function highlightRobotBin(binKey) {
+      const box = document.getElementById(`robotBin-${binKey}`);
+      if (box) {
+        box.classList.add('ring-2', 'ring-orange-400', 'bg-white/10');
+        setTimeout(() => {
+          box.classList.remove('ring-2', 'ring-orange-400', 'bg-white/10');
         }, 3000);
       }
     }
@@ -346,17 +460,80 @@
         const res = await fetch('/api/v1/sort/stats');
         const data = await res.json();
         document.getElementById('statTotal').innerText = data.total_orders;
-        document.getElementById('statInSorting').innerText = data.in_sorting_count ?? 0;
+        document.getElementById('statManualReview').innerText = data.manual_review_count ?? 0;
         document.getElementById('statSorted').innerText = data.sorted_count;
         document.getElementById('statPending').innerText = data.pending_count;
         document.getElementById('statRejected').innerText = data.rejected_count;
+        document.getElementById('statInspections').innerText = data.total_inspections ?? 0;
 
-        for (const [chuteId, count] of Object.entries(data.chute_counts)) {
+        for (const [chuteId, count] of Object.entries(data.chute_counts || {})) {
           const el = document.getElementById(`chuteCount-${chuteId}`);
+          if (el) el.innerText = count;
+        }
+        for (const [binKey, count] of Object.entries(data.robot_bin_counts || {})) {
+          const el = document.getElementById(`robotBinCount-${binKey}`);
           if (el) el.innerText = count;
         }
       } catch (e) {
         console.error('Lỗi lấy thống kê:', e);
+      }
+    }
+
+    function badgeBool(val, okLabel, failLabel) {
+      if (val === true) return `<span class="px-1.5 py-0.5 rounded bg-green-950 text-green-300 border border-green-800">${okLabel}</span>`;
+      if (val === false) return `<span class="px-1.5 py-0.5 rounded bg-red-950 text-red-300 border border-red-800">${failLabel}</span>`;
+      return `<span class="px-1.5 py-0.5 rounded bg-gray-800 text-gray-500">—</span>`;
+    }
+
+    async function fetchRecentLogs(seedConsole = false) {
+      try {
+        const res = await fetch('/api/v1/sort/logs?limit=15');
+        const logs = await res.json();
+        const tbody = document.getElementById('recentLogsBody');
+        if (!logs || logs.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="7" class="py-6 text-center text-gray-500">Chưa có bản ghi kiểm định nào trong bảng sorting_logs.</td></tr>';
+          return;
+        }
+
+        if (seedConsole) {
+          const latest = logs[0];
+          document.getElementById('lastScannedBadge').classList.remove('hidden');
+          document.getElementById('lastScannedCode').innerText = `${latest.tracking_code} (${latest.decision})`;
+          for (const item of [...logs].slice(0, 5).reverse()) {
+            const c = item.decision === 'PASS' ? 'text-green-400' : (item.decision === 'MANUAL_REVIEW' ? 'text-yellow-300' : 'text-red-400');
+            addLog(`[${item.timestamp_vn}] [${item.station_id}] ${item.tracking_code} → ${item.decision} (Rổ ${item.chute_id} / ${item.robot_bin}) • ${item.reason || ''}`, c);
+          }
+        }
+
+        tbody.innerHTML = logs.map(item => {
+          const decBadge = item.decision === 'PASS'
+            ? '<span class="px-2 py-0.5 rounded bg-green-950 text-green-400 border border-green-700 font-bold">PASS</span>'
+            : (item.decision === 'MANUAL_REVIEW'
+              ? '<span class="px-2 py-0.5 rounded bg-yellow-950 text-yellow-300 border border-yellow-700 font-bold">MANUAL_REVIEW</span>'
+              : '<span class="px-2 py-0.5 rounded bg-red-950 text-red-400 border border-red-700 font-bold">REJECT</span>');
+
+          const qrBadge = badgeBool(item.qr_ok, 'QR OK', 'QR LỖI');
+          const logoBadge = badgeBool(item.logo_ok, 'LOGO OK', 'THIẾU LOGO');
+          const dmgBadge = item.damage_detected === true
+            ? `<span class="px-1.5 py-0.5 rounded bg-red-950 text-red-300 border border-red-800">HƯ HỎNG</span>`
+            : (item.damage_detected === false
+              ? `<span class="px-1.5 py-0.5 rounded bg-green-950 text-green-300 border border-green-800">VỎ TỐT</span>`
+              : `<span class="px-1.5 py-0.5 rounded bg-gray-800 text-gray-500">—</span>`);
+
+          return `
+            <tr class="hover:bg-gray-800/60">
+              <td class="py-2.5 px-4 text-gray-400 whitespace-nowrap">${item.timestamp_vn}</td>
+              <td class="py-2.5 px-4 text-orange-300 whitespace-nowrap">${item.station_id || 'VISION-01'}</td>
+              <td class="py-2.5 px-4 font-bold text-white whitespace-nowrap">${item.tracking_code}</td>
+              <td class="py-2.5 px-4 whitespace-nowrap">${decBadge}</td>
+              <td class="py-2.5 px-4 whitespace-nowrap">Rổ ${item.chute_id} <span class="text-gray-500">→</span> <span class="text-cyan-300 font-bold">${item.robot_bin}</span></td>
+              <td class="py-2.5 px-4 space-x-1 whitespace-nowrap">${qrBadge}${logoBadge}${dmgBadge}</td>
+              <td class="py-2.5 px-4 text-gray-300 max-w-xs truncate" title="${(item.reason || '').replace(/"/g, '&quot;')}">${item.reason || '—'}</td>
+            </tr>
+          `;
+        }).join('');
+      } catch (e) {
+        console.error('Lỗi tải lịch sử sorting_logs:', e);
       }
     }
 
@@ -374,29 +551,26 @@
         return;
       }
 
-      addLog(`[TRA CỨU HIỆN TRƯỜNG] PC Control gửi mã: ${code}...`, 'text-cyan-300');
+      addLog(`[KIỂM TRA ĐỊNH TUYẾN] Đang tra cứu mã: ${code}...`, 'text-cyan-300');
 
       try {
         const resp = await fetch(`/api/v1/sort/lookup?mark_in_sorting=false&code=${encodeURIComponent(code)}`);
         const result = await resp.json();
 
-        if (result.found) {
-          // Tự động gửi confirm sau 1.5s (mô phỏng cơ cấu gạt kích hoạt ngoài đời)
-          setTimeout(async () => {
-            await fetch('/api/v1/sort/confirm', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                tracking_code: result.tracking_code,
-                chute_id: result.destination_chute_id,
-                status: result.destination_chute_id > 0 ? 'SUCCESS' : 'REJECTED',
-                simulated: true,
-                scan_attempts: 1,
-                notes: 'PC Control xác nhận cơ cấu gạt hoàn tất'
-              })
-            });
-          }, 1500);
-        }
+        setTimeout(async () => {
+          await fetch('/api/v1/sort/confirm', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              tracking_code: result.tracking_code || code,
+              chute_id: result.found ? result.destination_chute_id : 0,
+              status: (result.found && result.destination_chute_id > 0) ? 'SUCCESS' : 'REJECTED',
+              simulated: true,
+              scan_attempts: 1,
+              notes: '[Mô phỏng Web] Xác nhận điều hướng thử nghiệm'
+            })
+          });
+        }, 1000);
       } catch (e) {
         addLog(`[LỖI] Không thể kết nối API trạm: ${e.message}`, 'text-red-400');
       }
@@ -404,6 +578,7 @@
 
     connectWebSocket();
     fetchStats();
+    fetchRecentLogs(true);
     setInterval(fetchStats, 5000);
   </script>
 </body>

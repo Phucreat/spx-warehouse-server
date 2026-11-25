@@ -24,7 +24,7 @@
           <h1 class="text-lg font-black text-gray-900 font-mono">{{ order.tracking_code }}</h1>
         </div>
         <div class="text-xs text-gray-500 mt-1">
-          Mã đơn hàng: <span class="font-mono text-gray-700 font-semibold">{{ order.order_code }}</span> • Ngày đặt: {{ order.created_at.strftime('%d/%m/%Y %H:%M') }}
+          Mã đơn hàng: <span class="font-mono text-gray-700 font-semibold">{{ order.order_code }}</span> • Ngày đặt: {{ order.created_at | vn_time('%d/%m/%Y %H:%M') }}
         </div>
       </div>
 
@@ -33,6 +33,10 @@
         {% if order.status == 'SORTED' %}
         <span class="inline-flex items-center bg-blue-100 text-blue-800 font-bold px-3 py-1.5 rounded-full text-xs shadow-sm">
           <i class="fa-solid fa-truck-fast mr-1.5"></i> Đang Vận Chuyển Đến Trạm Chuyển Phát
+        </span>
+        {% elif order.has_scan_exception %}
+        <span class="inline-flex items-center bg-red-100 text-red-800 font-bold px-3 py-1.5 rounded-full text-xs shadow-sm">
+          <i class="fa-solid fa-triangle-exclamation mr-1.5"></i> Cần Kiểm Tra / Quét Lại Tại Trạm
         </span>
         {% elif order.status == 'IN_SORTING' %}
         <span class="inline-flex items-center bg-blue-100 text-blue-800 font-bold px-3 py-1.5 rounded-full text-xs animate-pulse shadow-sm">
@@ -68,22 +72,29 @@
         
         <!-- Bước 5: Phân loại tự động tại Phù Chẩn -->
         <div class="relative flex items-start space-x-3">
+          {% set bin_info = resolve_robot_bin('PASS' if order.status == 'SORTED' else (order.last_decision or 'PASS'), order.destination_chute_id) %}
           {% if order.status == 'SORTED' %}
           <div class="absolute -left-6 sm:-left-8 w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-green-500 text-white flex items-center justify-center text-xs shadow">
             <i class="fa-solid fa-check"></i>
           </div>
           <div>
             <div class="text-sm font-bold text-blue-700">Đang Vận Chuyển Đến Trạm Chuyển Phát ({{ order.destination_hub }})</div>
-            <p class="text-xs text-gray-600 mt-0.5">Kiện hàng đã rời Kho Tổng SPX Phù Chẩn và đang được xe tải luân chuyển đến bưu cục/trạm chuyển phát {{ order.destination_hub }}.</p>
-            <span class="text-[11px] text-gray-400 font-mono">{{ order.sorted_at.strftime('%d/%m/%Y %H:%M:%S') if order.sorted_at else '' }}</span>
+            <p class="text-xs text-gray-600 mt-0.5">Trạm Vision & Cánh tay Robot 6 trục đã phân loại thành công vào <strong>{{ bin_info.label }}</strong> (Rổ {{ order.destination_chute_id }}) và xuất kho luân chuyển tới {{ order.destination_hub }}.</p>
+            <span class="text-[11px] text-gray-400 font-mono">{{ order.sorted_at | vn_time('%d/%m/%Y %H:%M:%S') }}</span>
           </div>
-          {% elif order.status == 'REJECTED' %}
+          {% elif order.has_scan_exception %}
           <div class="absolute -left-6 sm:-left-8 w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-red-500 text-white flex items-center justify-center text-xs shadow">
             <i class="fa-solid fa-xmark"></i>
           </div>
           <div>
-            <div class="text-sm font-bold text-red-600">Bưu Kiện Đang Được Kiểm Tra Thủ Công (Xử Lý Ngoại Lệ)</div>
-            <p class="text-xs text-gray-600 mt-0.5">Bưu kiện không đạt kiểm tra tại trạm phân loại (lỗi đọc mã, logo hoặc bao bì). Chuyển nhân viên kiểm tra thủ công.</p>
+            <div class="text-sm font-bold text-red-600">Cảnh Báo Kiểm Định Tại Trạm Phân Loại ({{ order.last_decision or 'REJECT' }})</div>
+            <p class="text-xs text-gray-600 mt-0.5">
+              Trạm <strong>{{ order.last_station_id or 'VISION-01' }}</strong> ghi nhận: <span class="font-semibold text-red-700">{{ order.last_reason or 'Không đạt điều kiện đọc mã / bề mặt bưu kiện' }}</span>.
+              Kiện hàng được đưa vào <strong>Thùng Lỗi</strong> để kiểm tra hoặc đặt quét lại trên băng tải.
+            </p>
+            {% if order.last_scanned_at %}
+            <span class="text-[11px] text-gray-400 font-mono">{{ order.last_scanned_at | vn_time('%d/%m/%Y %H:%M:%S') }}</span>
+            {% endif %}
           </div>
           {% elif order.status == 'IN_SORTING' %}
           <div class="absolute -left-6 sm:-left-8 w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs shadow animate-ping">
@@ -106,14 +117,14 @@
 
         <!-- Bước 4: Nhập Kho Mega SOC Phù Chẩn -->
         <div class="relative flex items-start space-x-3">
-          {% if order.status in ('ARRIVED_PHU_CHAN_HUB', 'IN_SORTING', 'SORTED', 'REJECTED') %}
+          {% if order.status in ('ARRIVED_PHU_CHAN_HUB', 'IN_SORTING', 'SORTED', 'REJECTED') or order.has_scan_exception %}
           <div class="absolute -left-6 sm:-left-8 w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-green-500 text-white flex items-center justify-center text-xs shadow">
             <i class="fa-solid fa-check"></i>
           </div>
           <div>
             <div class="text-sm font-bold text-gray-900">Đã Nhập Kho Tổng SPX Mega SOC Phù Chẩn (Từ Sơn - Bắc Ninh)</div>
             <p class="text-xs text-gray-600 mt-0.5">Kiện hàng đã tập kết về kho trung chuyển lớn nhất miền Bắc và sẵn sàng chạy trên băng chuyền.</p>
-            <span class="text-[11px] text-gray-400 font-mono">{{ order.hub_received_at.strftime('%d/%m/%Y %H:%M') if order.hub_received_at else '' }}</span>
+            <span class="text-[11px] text-gray-400 font-mono">{{ order.hub_received_at | vn_time('%d/%m/%Y %H:%M') }}</span>
           </div>
           {% else %}
           <div class="absolute -left-6 sm:-left-8 w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gray-200 text-gray-400 flex items-center justify-center text-xs">
@@ -128,14 +139,14 @@
 
         <!-- Bước 3: Người bán in phiếu vận đơn & đóng gói -->
         <div class="relative flex items-start space-x-3">
-          {% if order.status in ('READY_TO_SHIP', 'ARRIVED_PHU_CHAN_HUB', 'IN_SORTING', 'SORTED', 'REJECTED') %}
+          {% if order.status in ('READY_TO_SHIP', 'ARRIVED_PHU_CHAN_HUB', 'IN_SORTING', 'SORTED', 'REJECTED') or order.has_scan_exception %}
           <div class="absolute -left-6 sm:-left-8 w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-green-500 text-white flex items-center justify-center text-xs shadow">
             <i class="fa-solid fa-check"></i>
           </div>
           <div>
             <div class="text-sm font-bold text-gray-900">Người Bán Đã Đóng Gói & In Phiếu Gửi Hàng SPX (A7)</div>
             <p class="text-xs text-gray-600 mt-0.5">Shop đã in mã vận đơn <code class="font-mono bg-gray-100 px-1 rounded">{{ order.tracking_code }}</code> dán lên kiện hàng.</p>
-            <span class="text-[11px] text-gray-400 font-mono">{{ order.confirmed_at.strftime('%d/%m/%Y %H:%M') if order.confirmed_at else '' }}</span>
+            <span class="text-[11px] text-gray-400 font-mono">{{ order.confirmed_at | vn_time('%d/%m/%Y %H:%M') }}</span>
           </div>
           {% else %}
           <div class="absolute -left-6 sm:-left-8 w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gray-200 text-gray-400 flex items-center justify-center text-xs">
@@ -156,7 +167,7 @@
           <div>
             <div class="text-sm font-bold text-gray-900">Đặt Hàng Thành Công</div>
             <p class="text-xs text-gray-600 mt-0.5">Đơn hàng đã được khởi tạo và ghi vào CSDL hệ thống.</p>
-            <span class="text-[11px] text-gray-400 font-mono">{{ order.created_at.strftime('%d/%m/%Y %H:%M') }}</span>
+            <span class="text-[11px] text-gray-400 font-mono">{{ order.created_at | vn_time('%d/%m/%Y %H:%M') }}</span>
           </div>
         </div>
 
@@ -226,9 +237,9 @@
   ws.onmessage = function(event) {
     try {
       const data = JSON.parse(event.data);
-      // Nếu có sự kiện phân loại liên quan đến đơn hàng này -> reload trang để cập nhật timeline!
-      if (data.tracking_code === "{{ order.tracking_code }}") {
-        setTimeout(() => { window.location.reload(); }, 800);
+      // Nếu có sự kiện phân loại thực tế liên quan đến đơn hàng này -> reload trang để cập nhật timeline!
+      if (!data.simulated && (data.tracking_code || '').toUpperCase() === "{{ order.tracking_code }}".toUpperCase()) {
+        setTimeout(() => { window.location.reload(); }, 600);
       }
     } catch(e) {}
   };

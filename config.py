@@ -1,6 +1,26 @@
 import os
+import datetime
 from pathlib import Path
+from typing import Optional
 from dotenv import load_dotenv
+
+# Múi giờ Việt Nam (GMT+7) để hiển thị đồng nhất thời gian từ Supabase UTC
+VN_TZ = datetime.timezone(datetime.timedelta(hours=7))
+
+
+def to_vn_time(dt: Optional[datetime.datetime]) -> Optional[datetime.datetime]:
+    """Chuyển đổi datetime lưu theo giờ UTC trên Supabase sang giờ Việt Nam (GMT+7)."""
+    if dt is None:
+        return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=datetime.timezone.utc)
+    return dt.astimezone(VN_TZ)
+
+
+def format_vn_time(dt: Optional[datetime.datetime], fmt: str = "%d/%m/%Y %H:%M") -> str:
+    """Format datetime sang chuỗi giờ Việt Nam an toàn cho Jinja2 & WebSocket."""
+    vn_dt = to_vn_time(dt)
+    return vn_dt.strftime(fmt) if vn_dt else ""
 
 # Load file .env nếu có
 BASE_DIR = Path(__file__).resolve().parent
@@ -90,8 +110,54 @@ CHUTE_DEFINITIONS = [
         "chute_id": 0,
         "name": "SỌT LỖI / NGOẠI LỆ (Reject Chute)",
         "routing_prefix": "ERR-REJECT",
-        "description": "Quét 3 lần không đọc được mã, sai thông tin hoặc không tồn tại trong CSDL",
+        "description": "Quét lỗi QR/tem/hư hỏng, cần kiểm tra lại hoặc không tồn tại trong CSDL",
         "color": "#dc2626",  # Red
         "provinces": []
     }
 ]
+
+# Cấu hình ánh xạ 3 Thùng Vật Lý của Cánh Tay Robot 6 Trục (khớp 100% SortingStation/config/station.yaml)
+ROBOT_BIN_DEFINITIONS = [
+    {
+        "bin_key": "DONG_BANG",
+        "label": "THÙNG ĐỒNG BẰNG",
+        "chutes": [1, 3, 5],
+        "description": "Rổ 1 (Hà Nội), Rổ 3 (Hải Phòng - Quảng Ninh), Rổ 5 (Nam Định - Thanh Hóa)",
+        "color": "#26a269",
+    },
+    {
+        "bin_key": "TRUNG_DU",
+        "label": "THÙNG TRUNG DU - MIỀN NÚI",
+        "chutes": [2, 4],
+        "description": "Rổ 2 (Bắc Ninh - Bắc Giang - Lạng Sơn), Rổ 4 (Thái Nguyên - Phú Thọ)",
+        "color": "#2f81f7",
+    },
+    {
+        "bin_key": "LOI",
+        "label": "THÙNG LỖI / CẦN XEM LẠI",
+        "chutes": [0],
+        "description": "Kiện REJECT (lỗi QR/tem/móp thùng), MANUAL_REVIEW hoặc mã ngoại lệ",
+        "color": "#f85149",
+    },
+]
+
+ROBOT_CHUTE_TO_BIN = {
+    1: "DONG_BANG",
+    3: "DONG_BANG",
+    5: "DONG_BANG",
+    2: "TRUNG_DU",
+    4: "TRUNG_DU",
+    0: "LOI",
+}
+
+ROBOT_BIN_BY_KEY = {b["bin_key"]: b for b in ROBOT_BIN_DEFINITIONS}
+
+
+def resolve_robot_bin(decision: Optional[str], chute_id: Optional[int]) -> dict:
+    """Ánh xạ quyết định Vision + mã rổ sang thùng vật lý của Robot 6 trục (khớp SortingSettings.resolve_bin)."""
+    norm_decision = (decision or "").upper()
+    if norm_decision == "PASS" and chute_id in (1, 2, 3, 4, 5):
+        key = ROBOT_CHUTE_TO_BIN.get(chute_id, "LOI")
+    else:
+        key = "LOI"
+    return ROBOT_BIN_BY_KEY[key]

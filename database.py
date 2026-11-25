@@ -11,11 +11,14 @@ if is_sqlite:
         connect_args={"check_same_thread": False}
     )
 else:
+    # Tối ưu cho Supabase Supavisor Session Pooler (tránh chạm giới hạn max_client_conn & kết nối treo)
     engine = create_engine(
         DATABASE_URL,
         pool_pre_ping=True,
-        pool_size=10,
-        max_overflow=20
+        pool_size=5,
+        max_overflow=5,
+        pool_recycle=300,
+        pool_timeout=15,
     )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

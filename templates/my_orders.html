@@ -74,6 +74,10 @@
           <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800">
             <i class="fa-solid fa-truck-fast mr-1.5"></i> Đang Vận Chuyển Đến Trạm Phát ({{ order.destination_hub }})
           </span>
+          {% elif order.has_scan_exception %}
+          <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800">
+            <i class="fa-solid fa-triangle-exclamation mr-1.5"></i> Đang Kiểm Tra Ngoại Lệ Tại Kho
+          </span>
           {% elif order.status == 'IN_SORTING' %}
           <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800 animate-pulse">
             <i class="fa-solid fa-camera mr-1.5"></i> Đang Qua Trạm Camera Phân Loại
@@ -85,10 +89,6 @@
           {% elif order.status == 'READY_TO_SHIP' %}
           <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-800">
             <i class="fa-solid fa-box mr-1.5"></i> Người Bán Đang Chuẩn Bị Hàng
-          </span>
-          {% elif order.status == 'REJECTED' %}
-          <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800">
-            <i class="fa-solid fa-triangle-exclamation mr-1.5"></i> Đang Xử Lý Ngoại Lệ
           </span>
           {% else %}
           <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-800">

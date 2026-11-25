@@ -147,7 +147,7 @@
     <div class="spx-order-date">
       <div class="text-[4.8px] text-gray-700 leading-none">Ngày đặt hàng:</div>
       <div class="font-bold text-[5.2px] font-mono leading-none text-black mt-[0.35mm]">
-        {{ order.created_at.strftime('%d-%m-%Y %H:%M') }}
+        {{ order.created_at | vn_time('%d-%m-%Y %H:%M') }}
       </div>
     </div>
 

@@ -173,7 +173,7 @@
                 <td class="py-3.5 px-4 font-mono">
                   <span class="font-extrabold text-shopee block">{{ order.tracking_code }}</span>
                   <span class="text-[10px] text-gray-400">Đơn: {{ order.order_code }}</span>
-                  <span class="text-[10px] text-gray-400 block">{{ order.created_at.strftime('%d/%m %H:%M') }}</span>
+                  <span class="text-[10px] text-gray-400 block">{{ order.created_at | vn_time('%d/%m %H:%M') }}</span>
                 </td>
 
                 <!-- Sản phẩm & Tiền -->
@@ -210,6 +210,15 @@
                   <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800">
                     <i class="fa-solid fa-truck-fast mr-1"></i> Đang vận chuyển đến trạm chuyển phát
                   </span>
+                  {% elif order.has_scan_exception %}
+                  <div>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-800">
+                      <i class="fa-solid fa-triangle-exclamation mr-1"></i> Ngoại lệ ({{ order.last_decision or 'REJECT' }})
+                    </span>
+                    {% if order.last_reason %}
+                    <div class="text-[10px] text-red-600 mt-0.5 max-w-[200px] line-clamp-2" title="{{ order.last_reason }}">{{ order.last_reason }}</div>
+                    {% endif %}
+                  </div>
                   {% elif order.status == 'IN_SORTING' %}
                   <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 animate-pulse">
                     <i class="fa-solid fa-camera mr-1"></i> Đang qua camera
@@ -221,10 +230,6 @@
                   {% elif order.status == 'READY_TO_SHIP' %}
                   <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800">
                     <i class="fa-solid fa-print mr-1"></i> Đã in tem / Đóng gói
-                  </span>
-                  {% elif order.status == 'REJECTED' %}
-                  <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-800">
-                    <i class="fa-solid fa-triangle-exclamation mr-1"></i> Sọt Lỗi (Reject)
                   </span>
                   {% else %}
                   <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-yellow-100 text-yellow-800">
@@ -317,14 +322,14 @@
       if (e.key === 'Enter') applySellerFilter();
     });
 
-    // WebSocket tự động cập nhật khi khách đặt đơn mới
+    // WebSocket tự động cập nhật khi khách đặt đơn mới hoặc trạm PC-Control vừa phân loại
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const ws = new WebSocket(`${protocol}//${window.location.host}/ws/sorting`);
     ws.onmessage = function(event) {
       try {
         const data = JSON.parse(event.data);
-        if (['NEW_ORDER_PLACED', 'SORT_CONFIRMED'].includes(data.event)) {
-          setTimeout(() => { window.location.reload(); }, 1200);
+        if (!data.simulated && ['NEW_ORDER_PLACED', 'SORT_CONFIRMED', 'STATION_INSPECTION'].includes(data.event)) {
+          setTimeout(() => { window.location.reload(); }, 900);
         }
       } catch(e) {}
     };

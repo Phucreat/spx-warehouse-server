@@ -5,7 +5,7 @@ from database import get_db
 from models import Product, Category, Order, OrderItem, User
 from schemas import CategoryResponse, ProductResponse, OrderCreate, OrderResponse
 from routing_engine import determine_chute, generate_order_code, generate_tracking_code
-from config import ORIGIN_HUB
+from config import ORIGIN_HUB, VN_TZ
 from auth import get_current_user
 import datetime
 
@@ -103,7 +103,7 @@ def create_order(
         note=payload.note,
         label_size="A7",
         user_id=current_user.id if current_user else None,
-        created_at=datetime.datetime.now(datetime.timezone.utc)
+        created_at=datetime.datetime.utcnow()
     )
     db.add(new_order)
     db.flush()
@@ -129,7 +129,7 @@ def create_order(
             "recipient": new_order.recipient_name,
             "total_amount": new_order.total_amount,
             "message": f"Khách hàng {new_order.recipient_name} vừa đặt đơn hàng mới!",
-            "timestamp": datetime.datetime.now().strftime("%H:%M:%S")
+            "timestamp": datetime.datetime.now(VN_TZ).strftime("%H:%M:%S")
         }))
     except Exception:
         pass

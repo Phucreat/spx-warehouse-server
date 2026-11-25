@@ -79,10 +79,41 @@ class OrderResponse(BaseModel):
     label_printed_at: Optional[datetime.datetime] = None
     created_at: datetime.datetime
     sorted_at: Optional[datetime.datetime]
+    last_decision: Optional[str] = None
+    last_reason: Optional[str] = None
+    last_station_id: Optional[str] = None
+    last_scanned_at: Optional[datetime.datetime] = None
     items: List[OrderItemResponse] = []
 
     class Config:
         from_attributes = True
+
+
+class SortingLogResponse(BaseModel):
+    id: int
+    inspection_uuid: Optional[str] = None
+    order_id: Optional[int] = None
+    tracking_code: str
+    order_code: Optional[str] = None
+    routing_code: Optional[str] = None
+    destination_hub: Optional[str] = None
+    chute_id: int
+    robot_bin: str = "LOI"
+    robot_bin_label: str = "THÙNG LỖI / CẦN XEM LẠI"
+    status: str
+    decision: Optional[str] = None
+    reason: Optional[str] = None
+    notes: Optional[str] = None
+    qr_ok: Optional[bool] = None
+    logo_ok: Optional[bool] = None
+    damage_detected: Optional[bool] = None
+    damage_types: List[str] = []
+    station_id: Optional[str] = None
+    scanned_from: Optional[str] = None
+    scan_attempts: int = 1
+    evidence_path: Optional[str] = None
+    created_at: Optional[datetime.datetime] = None
+    timestamp_vn: str = ""
 
 
 # Schema dành riêng cho Trạm Thị giác Máy tính (Computer Vision) & Bo mạch

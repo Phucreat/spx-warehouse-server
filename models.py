@@ -100,7 +100,46 @@ class Order(Base):
 
     user = relationship("User", back_populates="orders")
     items = relationship("OrderItem", back_populates="order", cascade="all, delete-orphan")
-    logs = relationship("SortingLog", back_populates="order", cascade="all, delete-orphan")
+    logs = relationship(
+        "SortingLog",
+        back_populates="order",
+        cascade="all, delete-orphan",
+        order_by="desc(SortingLog.id)",
+    )
+
+    @property
+    def last_log(self):
+        return self.logs[0] if self.logs else None
+
+    @property
+    def last_decision(self):
+        log = self.last_log
+        if not log:
+            return None
+        if log.decision:
+            return log.decision
+        return "PASS" if log.status in ("SORTED", "SUCCESS") else ("MANUAL_REVIEW" if log.status == "MANUAL_REVIEW" else "REJECT")
+
+    @property
+    def last_reason(self):
+        log = self.last_log
+        return (log.reason or log.notes) if log else None
+
+    @property
+    def last_station_id(self):
+        log = self.last_log
+        return (log.station_id or log.scanned_from) if log else None
+
+    @property
+    def last_scanned_at(self):
+        log = self.last_log
+        return log.created_at if log else None
+
+    @property
+    def has_scan_exception(self) -> bool:
+        if self.status == "REJECTED":
+            return True
+        return self.status != "SORTED" and self.last_decision in ("REJECT", "MANUAL_REVIEW")
 
 
 class OrderItem(Base):
